@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Checking that the correct library exists (and, by implication, that the correct compiler tag is being used).
+TARGETLIB="$ROOTCOREBIN/lib/x86_64-slc6-gcc48-opt/" 
+NEWWAVELIB="$ROOTCOREBIN/../Cutflow/share/NewWave/1.1.0/lib"
+GSLLIB="$ROOTCOREBIN/../Cutflow/share/gsl/2.1/lib"
+if [ -d $TARGETLIB ]; 
+then
+    echo "Found directory '$TARGETLIB', with matching compiler tag. Proceeding to link."
+else
+    echo "Did not find directory with matching compiler tag in ROOTCOREBIN/lib. Checking for others."
+    if [ -e $ROOTCOREBIN/lib/* ]; 
+    then
+	for compilertagdir in $ROOTCOREBIN/lib/*;
+	do
+	    echo "Found another directory with compiler tag: '$compilertagdir'."
+	    TARGETLIB=$compilertagdir
+	    echo "Proceeding to link with TARGETLIB = $TARGETLIB'."
+	    break
+	done
+    else
+	echo "No compiler tag directories were found. Not doing anything further."
+    fi
+fi
+
+
+if [ -d $TARGETLIB ]; 
+then
+    # Create (soft) links to the NewWave and gsl libraries in the $ROOTCOREBIN/lib/{compiler-tag} directory.
+    echo "Calling:"
+    echo " > cp $NEWWAVELIB/libNewWave* $TARGETLIB"
+    echo " > cp $GSLLIB/libgsl* $TARGETLIB"
+    cp $NEWWAVELIB/libNewWave* $TARGETLIB
+    cp $GSLLIB/libgsl*         $TARGETLIB
+else
+    echo "Did not find suitable target lib directory. Will not create any links."
+fi

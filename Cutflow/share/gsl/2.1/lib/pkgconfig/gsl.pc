@@ -1,0 +1,11 @@
+prefix=/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/gsl/2.1
+exec_prefix=/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/gsl/2.1
+libdir=/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/gsl/2.1/lib
+includedir=/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/gsl/2.1/include
+GSL_CBLAS_LIB=-lgslcblas
+
+Name: GSL
+Description: GNU Scientific Library
+Version: 2.1
+Libs: -L/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/gsl/2.1/lib -lgsl ${GSL_CBLAS_LIB} -lm -lm 
+Cflags: -I/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/gsl/2.1/include

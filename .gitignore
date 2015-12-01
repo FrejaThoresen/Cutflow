@@ -1,0 +1,6 @@
+.RootCoreBin
+RootCoreBin/
+rcSetup.csh
+rcSetup.sh
+runs/
+

@@ -1,0 +1,39 @@
+#! /usr/bin/env bash
+
+prefix=/hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/NewWave/1.1.0
+
+tmp=$(echo $* | egrep -- '--\<help\>|-\<h\>')
+if test $# -eq 0 || test -n "$tmp"; then
+echo "newwave-config: configuration tool for New Wave"
+echo "              https://newwave.hepforge.org"
+echo
+echo "Usage: $( basename $0 ) [--help|-h] | "
+echo "           [--{prefix,libdir,includedir}] | "
+echo "           [--{cppflags,ldflags,ldlibs}] | "
+echo "           [--version]"
+echo "Options:"
+echo "  --help | -h   : show this help message"
+echo
+echo "  --prefix      : show the installation prefix (cf. autoconf)"
+echo "  --includedir  : show the path to the directory containing the New Wave headers"
+echo "  --libdir      : show the path to the directory containing the New Wave libraries"
+echo
+echo "  --cppflags    : returns a '-I' string for insertion into CPPFLAGS"
+echo "  --ldflags     : returns a '-L' string for insertion into LDFLAGS"
+echo "  --libs        : returns a '-l' string for insertion into LIBS or LIBADD"
+echo
+echo "  --version     : returns New Wave release version number"
+fi
+
+OUT=""
+
+tmp=$( echo "$*" | egrep -- '--\<prefix\>')
+test -n "$tmp" && OUT="$OUT /hep/thoresen/work/Searching_for_pflow/Searching_for_Z/theSearch/share/NewWave/1.1.0"
+
+tmp=$( echo "$*" | egrep -- '--\<includedir\>')
+test -n "$tmp" && OUT="$OUT ${prefix}/include"
+
+tmp=$( echo "$*" | egrep -- '--\<libdir\>')
+test -n "$tmp" && OUT="$OUT ${exec_prefix}/lib"
+
+echo $OUT
