@@ -7,6 +7,7 @@
 #include <vector>
 #include "xAODJet/JetContainer.h"
 #include "JetSelectorTools/JetCleaningTool.h"
+#include "xAODPFlow/PFOContainer.h"
 
 using namespace std;
 class CutsInxAOD  { // : public TObject
@@ -21,6 +22,10 @@ private:
     vector<TLorentzVector> Z_from_jets; //!
     vector<TLorentzVector> Z_from_muons; //!
     vector<TLorentzVector> Z_from_electrons; //!
+
+    vector<TLorentzVector> chPFO; //!
+    vector<TLorentzVector> neuPFO; //!
+
 
 public:
 
@@ -39,6 +44,9 @@ public:
     void printZbosonsFromElectrons();
     void printZbosonsFromMuons();
 
+    void cutNeuPFO(const xAOD::PFOContainer* neuPFOs);
+    void cutChPFO(const xAOD::PFOContainer* chPFOs);
+
     // vectors
     vector<TLorentzVector> getMuonNeg();
     vector<TLorentzVector> getMuonPos();
@@ -54,9 +62,11 @@ public:
     double muon_phi; //!
     double muon_charge;//!
 
-    vector<TLorentzVector>  getZbosonsFromElectrons();
-    vector<TLorentzVector>  getZbosonsFromMuons();
-    vector<TLorentzVector>  getZbosonsFromJets();
+    vector<TLorentzVector> getZbosonsFromElectrons();
+    vector<TLorentzVector> getZbosonsFromMuons();
+    vector<TLorentzVector> getZbosonsFromJets();
+    vector<TLorentzVector> getNeuPFO();
+    vector<TLorentzVector> getChPFO();
 
 };
 

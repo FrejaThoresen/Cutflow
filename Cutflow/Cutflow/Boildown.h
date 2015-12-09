@@ -4,6 +4,8 @@
 #include <EventLoop/Algorithm.h>
 #include "TNtuple.h"
 #include "NewWave/NewWave.hh"
+#include "GoodRunsLists/GoodRunsListSelectionTool.h"
+#include "JetSelectorTools/JetCleaningTool.h"
 
 
 using namespace std;
@@ -28,16 +30,8 @@ public:
     string outputName;
     int m_eventCounter; //!
     int EventNumber; //!
-
-    TNtuple* chPFO; //!
-    TNtuple* chPFOwavelet; //!
-    TNtuple* neuPFO; //!
-    TNtuple* neuPFOwavelet; //!
-
-  int    nPixel; //!
-  double yRange; //!
-  NewWave::PixelDefinition *_pixelDefinition; //!
-  NewWave::WaveletEngine   *_waveletEngine; //!
+GoodRunsListSelectionTool *m_grl; //!
+    JetCleaningTool *m_jetCleaning; //!
 
   ClassDef(Boildown, 1);
 

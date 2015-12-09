@@ -40,6 +40,37 @@ vector<TLorentzVector> CutsInxAOD ::  getMuonPos(){
     return mu_vector_pos;
 }
 
+vector<TLorentzVector> CutsInxAOD ::  getChPFO(){
+    return chPFO;
+}
+
+vector<TLorentzVector> CutsInxAOD ::  getNeuPFO(){
+    return neuPFO;
+}
+
+void CutsInxAOD :: cutNeuPFO(const xAOD::PFOContainer* neuPFOs) {
+    double PFO_pt;
+
+    for(unsigned int i = 0; i < neuPFOs->size(); i++) {
+        PFO_pt = neuPFOs->at(i)->pt();
+        if (PFO_pt > 10000) {
+            neuPFO.push_back(TLorentzVector());
+            neuPFO.back().SetPtEtaPhiM(neuPFOs->at(i)->pt(), neuPFOs->at(i)->eta(), neuPFOs->at(i)->phi(), neuPFOs->at(i)->m());
+        }
+    }
+}
+
+void CutsInxAOD :: cutChPFO(const xAOD::PFOContainer* chPFOs) {
+    double PFO_pt;
+
+    for(unsigned int i = 0; i < chPFOs->size(); i++) {
+        PFO_pt = chPFOs->at(i)->pt();
+        if (PFO_pt > 10000) {
+            chPFO.push_back(TLorentzVector());
+            chPFO.back().SetPtEtaPhiM(chPFOs->at(i)->pt(), chPFOs->at(i)->eta(), chPFOs->at(i)->phi(), chPFOs->at(i)->m());
+        }
+    }
+}
 
 void CutsInxAOD :: analyzeJets(const xAOD::JetContainer* jets,JetCleaningTool *m_jetCleaning) {
 
@@ -47,21 +78,15 @@ void CutsInxAOD :: analyzeJets(const xAOD::JetContainer* jets,JetCleaningTool *m
     xAOD::JetContainer::const_iterator jet_itr = jets->begin();
     xAOD::JetContainer::const_iterator jet_end = jets->end();
     double jet_pt;
-    double jet_ptcone;
-    double jet_iso;
 
     for( ; jet_itr != jet_end; ++jet_itr ) {
         jet_pt = (*jet_itr)->pt();
         if( !m_jetCleaning->accept( **jet_itr )) continue; //only keep good clean jets
-        //if (jet_pt > 10000.0) continue;
 
         jet_vector.push_back(TLorentzVector());
         jet_vector.back().SetPtEtaPhiM(jet_pt, (*jet_itr)->eta(), (*jet_itr)->phi(), (*jet_itr)->m());
 
-        //cout << "jet_pt = " << jet_pt << ", jet_eta = " << (*jet_itr)->eta() << ", jet_phi = " << (*jet_itr)->phi() << ", jet_m = " << (*jet_itr)->m() << endl;
-        //cout << "jet_pt = " << jet_vector.back().Pt() << ", jet_eta = " << jet_vector.back().Eta() << ", jet_phi = " << jet_vector.back().Phi() << ", jet_m = " << jet_vector.back().M() << endl;
-
-    } // end for loop over jets
+    }
 }
 
 
@@ -213,3 +238,5 @@ void CutsInxAOD :: printZbosonsFromMuons() {
 
     }
 }
+
+

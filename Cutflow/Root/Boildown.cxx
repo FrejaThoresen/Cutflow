@@ -8,18 +8,23 @@
 #include "xAODRootAccess/tools/Message.h"
 // EDM includes:
 #include "xAODEventInfo/EventInfo.h"
-
+#include "xAODJet/JetContainer.h"
+#include "xAODJet/JetAuxContainer.h"
 #include <TTree.h>
 #include "TFile.h"
 #include <vector>
 #include "TLorentzVector.h"
-
+#include "EventLoop/OutputStream.h"
 #include "xAODPFlow/PFOContainer.h"
 #include "xAODPFlow/PFO.h"
 #include "Cutflow/Boildown.h"
-
+#include "xAODMuon/MuonContainer.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
+#include "GoodRunsLists/GoodRunsListSelectionTool.h"
+#include "xAODEgamma/ElectronContainer.h"
+#include <TSystem.h>
+
 
 using namespace std;
 
@@ -40,27 +45,16 @@ ClassImp(Boildown)
 
 Boildown :: Boildown ()
 {
-    // Here you put any code for the base initialization of variables,
-    // e.g. initialize all pointers to 0.  Note that you should only put
-    // the most basic initialization here, since this method will be
-    // called on both the submission and the worker node.  Most of your
-    // initialization code will go into histInitialize() and
-    // initialize().
 }
 
 
 
 EL::StatusCode Boildown :: setupJob (EL::Job& job)
 {
-    // Here you put code that sets up the job on the submission object
-    // so that it is ready to work with your algorithm, e.g. you can
-    // request the D3PDReader service or add output files.  Any code you
-    // put here could instead also go into the submission script.  The
-    // sole advantage of putting it here is that it gets automatically
-    // activated/deactivated when you add/remove the algorithm from your
-    // job, which may or may not be of value to you.
+    // tell EventLoop about our output xAOD:
+    EL::OutputStream out ("outputLabel", "xAOD");
+    job.outputAdd (out);
 
-    // let's initialize the algorithm to use the xAODRootAccess package
     job.useXAOD ();
     EL_RETURN_CHECK( "setupJob()", xAOD::Init() ); // call before opening first file
     return EL::StatusCode::SUCCESS;
@@ -70,23 +64,7 @@ EL::StatusCode Boildown :: setupJob (EL::Job& job)
 
 EL::StatusCode Boildown :: histInitialize ()
 {
-    // Here you do everything that needs to be done at the very
-    // beginning on each worker node, e.g. create histograms and output
-    // trees.  This method gets called before any input files are
-    // connected.
-
     TFile *outputFile = wk()->getOutputFile (outputName);
-
-    chPFO = new TNtuple("chPFO", "chPFO","chPFOpt");
-    neuPFO = new TNtuple("neuPFO", "neuPFO","neuPFOpt");
-    neuPFOwavelet = new TNtuple("neuPFOwavelet", "neuPFOwavelet","neuPFOwaveletPt");
-    chPFOwavelet = new TNtuple("chPFOwavelet", "chPFOwavelet","chPFOwaveletPt");
-
-    chPFO->SetDirectory (outputFile);
-    neuPFO->SetDirectory (outputFile);
-    neuPFOwavelet->SetDirectory (outputFile);
-    chPFOwavelet->SetDirectory (outputFile);
-
     return EL::StatusCode::SUCCESS;
 }
 
@@ -94,8 +72,6 @@ EL::StatusCode Boildown :: histInitialize ()
 
 EL::StatusCode Boildown :: fileExecute ()
 {
-    // Here you do everything that needs to be done exactly once for every
-    // single file, e.g. collect a list of all lumi-blocks processed
     return EL::StatusCode::SUCCESS;
 }
 
@@ -103,9 +79,6 @@ EL::StatusCode Boildown :: fileExecute ()
 
 EL::StatusCode Boildown :: changeInput (bool firstFile)
 {
-    // Here you do everything you need to do when we change input files,
-    // e.g. resetting branch addresses on trees.  If you are using
-    // D3PDReader or a similar service this method is not needed.
     return EL::StatusCode::SUCCESS;
 }
 
@@ -113,22 +86,29 @@ EL::StatusCode Boildown :: changeInput (bool firstFile)
 
 EL::StatusCode Boildown :: initialize ()
 {
-    // Here you do everything that you need to do after the first input
-    // file has been connected and before the first event is processed,
-    // e.g. create additional histograms based on which variables are
-    // available in the input files.  You can also create all of your
-    // histograms and trees in here, but be aware that this method
-    // doesn't get called if no events are processed.  So any objects
-    // you create here won't be available in the output if you have no
-    // input events.
-
+ 
     // count number of events
     m_eventCounter = 0;
     xAOD::TEvent* event = wk()->xaodEvent();
 
+    // output xAOD
+    TFile *file = wk()->getOutputFile ("outputLabel");
+    EL_RETURN_CHECK("initialize()",event->writeTo(file));
+ 
+
+
     // as a check, let's see the number of events in our xAOD
     Info("initialize()", "Number of events = %lli", event->getEntries() ); // print long long int
 
+    /*m_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
+    const char* GRLFilePath = "share/GRLs";
+    const char* fullGRLFilePath = gSystem->ExpandPathName (GRLFilePath);
+    std::vector<std::string> vecStringGRL;
+    vecStringGRL.push_back(fullGRLFilePath);
+    EL_RETURN_CHECK("initialize()",m_grl->setProperty( "GoodRunsListVec", vecStringGRL));
+    EL_RETURN_CHECK("initialize()",m_grl->setProperty("PassThrough", false)); // if true (default) will ignore result of GRL and will just pass all events
+    EL_RETURN_CHECK("initialize()",m_grl->initialize());
+*/
     return EL::StatusCode::SUCCESS;
 }
 
@@ -136,25 +116,22 @@ EL::StatusCode Boildown :: initialize ()
 
 EL::StatusCode Boildown :: execute ()
 {
-    // Here you do everything that needs to be done on every single
-    // events, e.g. read input variables, apply cuts, and fill
-    // histograms and trees.  This is where most of your actual analysis
-    // code will go.
-
-
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- EVENT INFORMATION -------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
     xAOD::TEvent* event = wk()->xaodEvent();
+    
+    // print every 100 events, so we know where we are:
+    if( (m_eventCounter % 1) ==0 ) //Info("execute()", "Event number = %i", m_eventCounter );
+        m_eventCounter++;
+
+
     /*Info("execute()", " ");
     Info("execute()", "=====================");
     Info("execute()", " * Event number %4d", m_eventCounter);
     Info("execute()", "---------------------");
-*/
-    // print every 100 events, so we know where we are:
-    if( (m_eventCounter % 1) ==0 ) //Info("execute()", "Event number = %i", m_eventCounter );
-        m_eventCounter++;
+    */
 
     const xAOD::EventInfo* eventInfo = 0;
     EL_RETURN_CHECK("execute",event->retrieve( eventInfo, "EventInfo"));
@@ -167,78 +144,133 @@ EL::StatusCode Boildown :: execute ()
         isMC = true; // can do something with this later
     }
 
-    // fill the branches of our trees
-    EventNumber = eventInfo->eventNumber();
+    // if data check if event passes GRL
+    /*if(!isMC){ // it's data!
+    if(!m_grl->passRunLB(*eventInfo)){
+        //return EL::StatusCode::SUCCESS; // go to next event
+        cout << "This is not in GoodRunsList" << endl;
+        }
+    } // end if not MC
+*/
 
     //-------------------------------------------------------------------------------------------------------
-    //---------------------------------------------- PFLOW --------------------------------------------------
+    //----------------------------------------- CONTAINERS --------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
     const xAOD::PFOContainer* chPFOs = 0;
     const xAOD::PFOContainer* neuPFOs = 0;
-
     EL_RETURN_CHECK("execute()", event->retrieve( chPFOs, "JetETMissChargedParticleFlowObjects" ) );
     EL_RETURN_CHECK("execute()", event->retrieve( neuPFOs, "JetETMissNeutralParticleFlowObjects" ) );
 
-    double chPFOpt = 0.;
-    double neuPFOpt = 0.;
+    const xAOD::JetContainer* jets = 0;
+    EL_RETURN_CHECK("execute()",event->retrieve( jets, "AntiKt4LCTopoJets" ));
+    xAOD::JetContainer::const_iterator jet_itr = jets->begin();
+    xAOD::JetContainer::const_iterator jet_end = jets->end();
 
-      // * Charged.
-    vector<TLorentzVector> chPFO_vec_new; 
-    vector<TLorentzVector> chPFO_vec; 
+    const xAOD::MuonContainer* muons = 0;
+    EL_RETURN_CHECK("execute()",event->retrieve( muons, "Muons" ));
+    xAOD::MuonContainer::const_iterator muon_itr = muons->begin();
+    xAOD::MuonContainer::const_iterator muon_end = muons->end();
 
-    for (unsigned int i = 0; i < chPFOs->size(); i++) {
-        chPFOpt = chPFOs->at(i)->pt();
-        if (chPFOpt > 10000.0) {
-                    chPFO->Fill(chPFOpt);
-                    chPFO_vec.push_back(TLorentzVector());
-                    chPFO_vec.back().SetPtEtaPhiM(chPFOs->at(i)->pt(), chPFOs->at(i)->eta(), chPFOs->at(i)->phi(), chPFOs->at(i)->m());
-        }
-    }
+    const xAOD::ElectronContainer* electrons = 0;
+    EL_RETURN_CHECK("execute()",event->retrieve( electrons, "Electrons" ));
+    xAOD::ElectronContainer::const_iterator electron_itr = electrons->begin();
+    xAOD::ElectronContainer::const_iterator electron_end = electrons->end();
 
-    vector<TLorentzVector> neuPFO_vec_new; 
-    vector<TLorentzVector> neuPFO_vec; 
-
-    for (unsigned int i = 0; i < neuPFOs->size(); i++) {
-        neuPFOpt = neuPFOs->at(i)->pt();
-        if (neuPFOpt > 10000.0) {
-                    neuPFO->Fill(neuPFOpt);
-                    neuPFO_vec.push_back(TLorentzVector());
-                    neuPFO_vec.back().SetPtEtaPhiM(neuPFOs->at(i)->pt(), neuPFOs->at(i)->eta(), neuPFOs->at(i)->phi(), neuPFOs->at(i)->m());
-        }
-    }
 
     //-------------------------------------------------------------------------------------------------------
-    //---------------------------------------------- WAVELET ------------------------------------------------
+    //----------------------------------------- DEEP COPY CONTAINERS ----------------------------------------
     //-------------------------------------------------------------------------------------------------------
-   // hello
-    int nPixel =  64;
-    double yRange = 3.2;
-    NewWave::PixelDefinition* _pixelDefinition = new NewWave::PixelDefinition(nPixel, yRange);
-    NewWave::GSLEngine* _waveletEngine = new NewWave::GSLEngine(gsl_wavelet_haar, 2, *_pixelDefinition);
-
-    NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowNeu(neuPFO_vec, *_pixelDefinition, *_waveletEngine);
-    wePFlowNeu.denoise(1.);
-    neuPFO_vec_new = wePFlowNeu.particles();
-
-    NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowCh(chPFO_vec, *_pixelDefinition, *_waveletEngine);
-    wePFlowCh.denoise(1.);
-    chPFO_vec_new = wePFlowCh.particles();
-
     
-    double neuPFOwaveletPt = 0.;
-    for (unsigned int j = 0; j < neuPFO_vec_new.size(); j++) {
-        neuPFOwaveletPt = neuPFO_vec_new.at(j).Pt();
-        neuPFOwavelet->Fill(neuPFOwaveletPt);
+    // ---------------------------------------------- Jets --------------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::JetContainer* goodJets = new xAOD::JetContainer();
+    xAOD::AuxContainerBase* goodJetsAux = new xAOD::AuxContainerBase();
+    goodJets->setStore( goodJetsAux ); //< Connect the two
+       for( ; jet_itr != jet_end; ++jet_itr ) {
+        //if( ! m_jetCleaning->accept( **jet_itr ) ) continue;
+        // Copy this jet to the output container:
+        xAOD::Jet* jet = new xAOD::Jet();
+        goodJets->push_back( jet ); // jet acquires the goodJets auxstore
+        *jet= **jet_itr; // copies auxdata from one auxstore to the other
     }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodJets, "GoodJets" ));
+    EL_RETURN_CHECK("execute()",event->record( goodJetsAux, "GoodJetsAux." ));
 
-    double chPFOwaveletPt = 0.;
-    for (unsigned int j = 0; j < chPFO_vec_new.size(); j++) {
-        chPFOwaveletPt = chPFO_vec_new.at(j).Pt();
-        chPFOwavelet->Fill(chPFOwaveletPt);
+
+    // ---------------------------------------------- Muons --------------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::MuonContainer* goodMuons = new xAOD::MuonContainer();
+    xAOD::AuxContainerBase* goodMuonsAux = new xAOD::AuxContainerBase();
+    goodMuons->setStore( goodMuonsAux ); //< Connect the two
+    float ptcone;
+    for(; muon_itr != muon_end; ++muon_itr) {
+        ptcone = (*muon_itr)->auxdata<float>("ptcone20");
+        double iso = ptcone / (*muon_itr)->pt();
+        double muon_pt = (*muon_itr)->pt();
+        if (iso < 0.1 && muon_pt > 10000.0) {
+            xAOD::Muon* muon = new xAOD::Muon();
+            goodMuons->push_back(muon);
+            *muon = **muon_itr;
+        }
     }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodMuons, "GoodMuons" ));
+    EL_RETURN_CHECK("execute()",event->record( goodMuonsAux, "GoodMuonsAux." ));
 
 
+    // ---------------------------------------------- Electrons -----------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::ElectronContainer* goodElectrons = new xAOD::ElectronContainer();
+    xAOD::AuxContainerBase* goodElectronsAux = new xAOD::AuxContainerBase();
+    goodElectrons->setStore( goodElectronsAux ); //< Connect the two
+    for(; electron_itr != electron_end; ++electron_itr) {
+        ptcone = (*electron_itr)->auxdata<float>("ptcone20");
+        double electron_pt = (*electron_itr)->pt();
+        double iso = ptcone / (*electron_itr)->pt();
+
+        if (iso < 0.1 && electron_pt > 10000.0) {
+            xAOD::Electron* electron = new xAOD::Electron();
+            goodElectrons->push_back(electron);
+            *electron = **electron_itr;
+        }
+    }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodElectrons, "GoodElectrons" ));
+    EL_RETURN_CHECK("execute()",event->record( goodElectronsAux, "GoodElectronsAux." ));
+
+
+    // ---------------------------------------------- PFO --------------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::PFOContainer* goodPFOneu = new xAOD::PFOContainer();
+    xAOD::AuxContainerBase* goodPFOneuAux = new xAOD::AuxContainerBase();
+    goodPFOneu->setStore( goodPFOneuAux ); //< Connect the two
+    xAOD::PFOContainer* goodPFOch = new xAOD::PFOContainer();
+    xAOD::AuxContainerBase* goodPFOchAux = new xAOD::AuxContainerBase();
+    goodPFOch->setStore( goodPFOchAux ); //< Connect the two
+    for (unsigned int i = 0; i < chPFOs->size(); i++) {
+        if (chPFOs->at(i)->pt() > 10000.0) {
+                   xAOD::PFO* pfo = new xAOD::PFO();
+                   goodPFOch->push_back(pfo);
+                   *pfo = *(chPFOs->at(i));
+        }
+    }
+    for (unsigned int i = 0; i < neuPFOs->size(); i++) {
+        if (neuPFOs->at(i)->pt() > 10000.0) {
+                   xAOD::PFO* pfo = new xAOD::PFO();
+                   goodPFOneu->push_back(pfo);
+                   *pfo = *(neuPFOs->at(i));
+        }
+    }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodPFOneu, "GoodPFOneu" ));
+    EL_RETURN_CHECK("execute()",event->record( goodPFOneuAux, "GoodPFOneuAux." ));
+    EL_RETURN_CHECK("execute()",event->record( goodPFOch, "GoodPFOch" ));
+    EL_RETURN_CHECK("execute()",event->record( goodPFOchAux, "GoodPFOchAux." ));
+
+
+    event->fill();
     return EL::StatusCode::SUCCESS;
 }
 
@@ -246,9 +278,6 @@ EL::StatusCode Boildown :: execute ()
 
 EL::StatusCode Boildown :: postExecute ()
 {
-    // Here you do everything that needs to be done after the main event
-    // processing.  This is typically very rare, particularly in user
-    // code.  It is mainly used in implementing the NTupleSvc.
     return EL::StatusCode::SUCCESS;
 }
 
@@ -256,17 +285,15 @@ EL::StatusCode Boildown :: postExecute ()
 
 EL::StatusCode Boildown :: finalize ()
 {
-    // This method is the mirror image of initialize(), meaning it gets
-    // called after the last event has been processed on the worker node
-    // and allows you to finish up any objects you created in
-    // initialize() before they are written to disk.  This is actually
-    // fairly rare, since this happens separately for each worker node.
-    // Most of the time you want to do your post-processing on the
-    // submission node after all your histogram outputs have been
-    // merged.  This is different from histFinalize() in that it only
-    // gets called on worker nodes that processed input events.
-
     xAOD::TEvent* event = wk()->xaodEvent();
+
+   /*   if (m_grl) {
+    delete m_grl;
+    m_grl = 0;
+  }*/
+    // finalize and close our output xAOD file:
+TFile *file = wk()->getOutputFile ("outputLabel");
+EL_RETURN_CHECK("finalize()",event->finishWritingTo( file ));
     return EL::StatusCode::SUCCESS;
 }
 
@@ -274,16 +301,6 @@ EL::StatusCode Boildown :: finalize ()
 
 EL::StatusCode Boildown :: histFinalize ()
 {
-    // This method is the mirror image of histInitialize(), meaning it
-    // gets called after the last event has been processed on the worker
-    // node and allows you to finish up any objects you created in
-    // histInitialize() before they are written to disk.  This is
-    // actually fairly rare, since this happens separately for each
-    // worker node.  Most of the time you want to do your
-    // post-processing on the submission node after all your histogram
-    // outputs have been merged.  This is different from finalize() in
-    // that it gets called on all worker nodes regardless of whether
-    // they processed input events.
     return EL::StatusCode::SUCCESS;
 }
 
