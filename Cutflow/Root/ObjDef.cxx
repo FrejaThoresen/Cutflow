@@ -17,7 +17,7 @@
 #include "EventLoop/OutputStream.h"
 #include "xAODPFlow/PFOContainer.h"
 #include "xAODPFlow/PFO.h"
-#include "Cutflow/Boildown.h"
+#include "Cutflow/ObjDef.h"
 #include "xAODMuon/MuonContainer.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
@@ -25,11 +25,11 @@
 #include "xAODEgamma/ElectronContainer.h"
 #include <TSystem.h>
 
-#include <fstream>
+
 using namespace std;
 
 // this is needed to distribute the algorithm to the workers
-ClassImp(Boildown)
+ClassImp(ObjDef)
 
 /// Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )                     \
@@ -43,13 +43,13 @@ ClassImp(Boildown)
    } while( false )
 
 
-Boildown :: Boildown ()
+ObjDef :: ObjDef ()
 {
 }
 
 
 
-EL::StatusCode Boildown :: setupJob (EL::Job& job)
+EL::StatusCode ObjDef :: setupJob (EL::Job& job)
 {
     // tell EventLoop about our output xAOD:
     EL::OutputStream out ("outputLabel", "xAOD");
@@ -62,7 +62,7 @@ EL::StatusCode Boildown :: setupJob (EL::Job& job)
 
 
 
-EL::StatusCode Boildown :: histInitialize ()
+EL::StatusCode ObjDef :: histInitialize ()
 {
     TFile *outputFile = wk()->getOutputFile (outputName);
     return EL::StatusCode::SUCCESS;
@@ -70,21 +70,21 @@ EL::StatusCode Boildown :: histInitialize ()
 
 
 
-EL::StatusCode Boildown :: fileExecute ()
+EL::StatusCode ObjDef :: fileExecute ()
 {
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode Boildown :: changeInput (bool firstFile)
+EL::StatusCode ObjDef :: changeInput (bool firstFile)
 {
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode Boildown :: initialize ()
+EL::StatusCode ObjDef :: initialize ()
 {
  
     // count number of events
@@ -114,12 +114,12 @@ EL::StatusCode Boildown :: initialize ()
 
 
 
-EL::StatusCode Boildown :: execute ()
+EL::StatusCode ObjDef :: execute ()
 {
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- EVENT INFORMATION -------------------------------------------
     //-------------------------------------------------------------------------------------------------------
-    bool copyEvent = true;
+
     xAOD::TEvent* event = wk()->xaodEvent();
     
     // print every 100 events, so we know where we are:
@@ -157,6 +157,11 @@ EL::StatusCode Boildown :: execute ()
     //----------------------------------------- CONTAINERS --------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
+    const xAOD::PFOContainer* chPFOs = 0;
+    const xAOD::PFOContainer* neuPFOs = 0;
+    EL_RETURN_CHECK("execute()", event->retrieve( chPFOs, "JetETMissChargedParticleFlowObjects" ) );
+    EL_RETURN_CHECK("execute()", event->retrieve( neuPFOs, "JetETMissNeutralParticleFlowObjects" ) );
+
     const xAOD::JetContainer* jets = 0;
     EL_RETURN_CHECK("execute()",event->retrieve( jets, "AntiKt4LCTopoJets" ));
     xAOD::JetContainer::const_iterator jet_itr = jets->begin();
@@ -173,66 +178,112 @@ EL::StatusCode Boildown :: execute ()
     xAOD::ElectronContainer::const_iterator electron_end = electrons->end();
 
 
-    // ---------------------------------------------- Muons --------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------
+    //----------------------------------------- DEEP COPY CONTAINERS ----------------------------------------
+    //-------------------------------------------------------------------------------------------------------
+    
+    // ---------------------------------------------- Jets --------------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::JetContainer* goodJets = new xAOD::JetContainer();
+    xAOD::AuxContainerBase* goodJetsAux = new xAOD::AuxContainerBase();
+    goodJets->setStore( goodJetsAux ); //< Connect the two
+       for( ; jet_itr != jet_end; ++jet_itr ) {
+        //if( ! m_jetCleaning->accept( **jet_itr ) ) continue;
+        // Copy this jet to the output container:
+        xAOD::Jet* jet = new xAOD::Jet();
+        goodJets->push_back( jet ); // jet acquires the goodJets auxstore
+        *jet= **jet_itr; // copies auxdata from one auxstore to the other
+    }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodJets, "GoodJets" ));
+    EL_RETURN_CHECK("execute()",event->record( goodJetsAux, "GoodJetsAux." ));
 
+
+    // ---------------------------------------------- Muons --------------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::MuonContainer* goodMuons = new xAOD::MuonContainer();
+    xAOD::AuxContainerBase* goodMuonsAux = new xAOD::AuxContainerBase();
+    goodMuons->setStore( goodMuonsAux ); //< Connect the two
     float ptcone;
     for(; muon_itr != muon_end; ++muon_itr) {
         ptcone = (*muon_itr)->auxdata<float>("ptcone20");
         double iso = ptcone / (*muon_itr)->pt();
         double muon_pt = (*muon_itr)->pt();
         if (iso < 0.1 && muon_pt > 10000.0) {
+            xAOD::Muon* muon = new xAOD::Muon();
+            goodMuons->push_back(muon);
+            *muon = **muon_itr;
         }
     }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodMuons, "GoodMuons" ));
+    EL_RETURN_CHECK("execute()",event->record( goodMuonsAux, "GoodMuonsAux." ));
 
 
     // ---------------------------------------------- Electrons -----------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::ElectronContainer* goodElectrons = new xAOD::ElectronContainer();
+    xAOD::AuxContainerBase* goodElectronsAux = new xAOD::AuxContainerBase();
+    goodElectrons->setStore( goodElectronsAux ); //< Connect the two
     for(; electron_itr != electron_end; ++electron_itr) {
+        ptcone = (*electron_itr)->auxdata<float>("ptcone20");
         double electron_pt = (*electron_itr)->pt();
-        if (electron_pt > 10000.0) {
+        double iso = ptcone / (*electron_itr)->pt();
+
+        if (iso < 0.1 && electron_pt > 10000.0) {
+            xAOD::Electron* electron = new xAOD::Electron();
+            goodElectrons->push_back(electron);
+            *electron = **electron_itr;
         }
     }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodElectrons, "GoodElectrons" ));
+    EL_RETURN_CHECK("execute()",event->record( goodElectronsAux, "GoodElectronsAux." ));
 
-    if (copyEvent == true) {
-        cout << "copying event" << endl;
-  string line;
-  ifstream myfile ("/hep/thoresen/work/Cutflow/Cutflow/util/output.txt");
-  if (myfile.is_open())
-  {
-    cout << "file is open" << endl;
-    while ( getline (myfile,line) )
-    {
-        if (event->copy(line).isSuccess()) {
-      //cout << "reading line.." << endl;
-      cout << line << endl;
-      cout << typeid(line).name() << endl;
 
-      EL_RETURN_CHECK("execute()",event->copy(line));
-  }
+    // ---------------------------------------------- PFO --------------------------------------------------
+    // Create the new container and its auxiliary store.
+    xAOD::PFOContainer* goodPFOneu = new xAOD::PFOContainer();
+    xAOD::AuxContainerBase* goodPFOneuAux = new xAOD::AuxContainerBase();
+    goodPFOneu->setStore( goodPFOneuAux ); //< Connect the two
+    xAOD::PFOContainer* goodPFOch = new xAOD::PFOContainer();
+    xAOD::AuxContainerBase* goodPFOchAux = new xAOD::AuxContainerBase();
+    goodPFOch->setStore( goodPFOchAux ); //< Connect the two
+    for (unsigned int i = 0; i < chPFOs->size(); i++) {
+        if (chPFOs->at(i)->pt() > 10000.0) {
+                   xAOD::PFO* pfo = new xAOD::PFO();
+                   goodPFOch->push_back(pfo);
+                   *pfo = *(chPFOs->at(i));
+        }
     }
-    myfile.close();
-  event->fill();
-  }
-  else cout << "Unable to open file"; 
-
+    for (unsigned int i = 0; i < neuPFOs->size(); i++) {
+        if (neuPFOs->at(i)->pt() > 10000.0) {
+                   xAOD::PFO* pfo = new xAOD::PFO();
+                   goodPFOneu->push_back(pfo);
+                   *pfo = *(neuPFOs->at(i));
+        }
     }
-    else {
-        cout << "event not copied" << endl;
-    }
+    // Record the objects into the output xAOD:
+    EL_RETURN_CHECK("execute()",event->record( goodPFOneu, "GoodPFOneu" ));
+    EL_RETURN_CHECK("execute()",event->record( goodPFOneuAux, "GoodPFOneuAux." ));
+    EL_RETURN_CHECK("execute()",event->record( goodPFOch, "GoodPFOch" ));
+    EL_RETURN_CHECK("execute()",event->record( goodPFOchAux, "GoodPFOchAux." ));
 
 
+    event->fill();
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode Boildown :: postExecute ()
+EL::StatusCode ObjDef :: postExecute ()
 {
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode Boildown :: finalize ()
+EL::StatusCode ObjDef :: finalize ()
 {
     xAOD::TEvent* event = wk()->xaodEvent();
 
@@ -248,7 +299,7 @@ EL_RETURN_CHECK("finalize()",event->finishWritingTo( file ));
 
 
 
-EL::StatusCode Boildown :: histFinalize ()
+EL::StatusCode ObjDef :: histFinalize ()
 {
     return EL::StatusCode::SUCCESS;
 }
