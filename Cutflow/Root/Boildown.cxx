@@ -18,6 +18,7 @@
 #include "xAODPFlow/PFOContainer.h"
 #include "xAODPFlow/PFO.h"
 #include "Cutflow/Boildown.h"
+#include "Cutflow/CutsInxAOD.h"
 #include "xAODMuon/MuonContainer.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
@@ -56,6 +57,7 @@ EL::StatusCode Boildown :: setupJob (EL::Job& job)
     job.outputAdd (out);
 
     job.useXAOD ();
+
     EL_RETURN_CHECK( "setupJob()", xAOD::Init() ); // call before opening first file
     return EL::StatusCode::SUCCESS;
 }
@@ -94,13 +96,12 @@ EL::StatusCode Boildown :: initialize ()
     // output xAOD
     TFile *file = wk()->getOutputFile ("outputLabel");
     EL_RETURN_CHECK("initialize()",event->writeTo(file));
- 
-
 
     // as a check, let's see the number of events in our xAOD
     Info("initialize()", "Number of events = %lli", event->getEntries() ); // print long long int
 
-    /*m_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
+    /*
+    m_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
     const char* GRLFilePath = "share/GRLs";
     const char* fullGRLFilePath = gSystem->ExpandPathName (GRLFilePath);
     std::vector<std::string> vecStringGRL;
@@ -108,7 +109,7 @@ EL::StatusCode Boildown :: initialize ()
     EL_RETURN_CHECK("initialize()",m_grl->setProperty( "GoodRunsListVec", vecStringGRL));
     EL_RETURN_CHECK("initialize()",m_grl->setProperty("PassThrough", false)); // if true (default) will ignore result of GRL and will just pass all events
     EL_RETURN_CHECK("initialize()",m_grl->initialize());
-*/
+    */
     return EL::StatusCode::SUCCESS;
 }
 
@@ -119,15 +120,15 @@ EL::StatusCode Boildown :: execute ()
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- EVENT INFORMATION -------------------------------------------
     //-------------------------------------------------------------------------------------------------------
-    bool copyEvent = true;
+    bool copyEvent = false;
     xAOD::TEvent* event = wk()->xaodEvent();
     
     // print every 100 events, so we know where we are:
     if( (m_eventCounter % 1) ==0 ) //Info("execute()", "Event number = %i", m_eventCounter );
         m_eventCounter++;
 
-
-    /*Info("execute()", " ");
+    /*
+    Info("execute()", " ");
     Info("execute()", "=====================");
     Info("execute()", " * Event number %4d", m_eventCounter);
     Info("execute()", "---------------------");
@@ -142,16 +143,21 @@ EL::StatusCode Boildown :: execute ()
     // check if the event is MC
     if(eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION ) ){
         isMC = true; // can do something with this later
+        cout << "------ Data is from MC" << endl;
+    }
+    else {
+        cout << "------ Data is from raw data" << endl;
     }
 
     // if data check if event passes GRL
-    /*if(!isMC){ // it's data!
+    /*
+    if(!isMC){ // it's data!
     if(!m_grl->passRunLB(*eventInfo)){
         //return EL::StatusCode::SUCCESS; // go to next event
         cout << "This is not in GoodRunsList" << endl;
         }
     } // end if not MC
-*/
+    */
 
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- CONTAINERS --------------------------------------------------
@@ -172,53 +178,48 @@ EL::StatusCode Boildown :: execute ()
     xAOD::ElectronContainer::const_iterator electron_itr = electrons->begin();
     xAOD::ElectronContainer::const_iterator electron_end = electrons->end();
 
+    CutsInxAOD* cutAnalyzer = new CutsInxAOD();
 
     // ---------------------------------------------- Muons --------------------------------------------------
 
-    float ptcone;
-    for(; muon_itr != muon_end; ++muon_itr) {
-        ptcone = (*muon_itr)->auxdata<float>("ptcone20");
-        double iso = ptcone / (*muon_itr)->pt();
-        double muon_pt = (*muon_itr)->pt();
-        if (iso < 0.1 && muon_pt > 10000.0) {
-        }
+    cutAnalyzer->analyzeZbosonsFromElectrons(electrons);
+    cutAnalyzer->analyzeZbosonsFromMuons(muons);
+
+    Z_from_electrons = cutAnalyzer->getZbosonsFromElectrons();
+    Z_from_muons = cutAnalyzer->getZbosonsFromMuons();
+
+    if (Z_from_muons.size() > 0 || Z_from_electrons.size() > 0) {
+        copyEvent = true;
     }
-
-
-    // ---------------------------------------------- Electrons -----------------------------------------------
-    for(; electron_itr != electron_end; ++electron_itr) {
-        double electron_pt = (*electron_itr)->pt();
-        if (electron_pt > 10000.0) {
-        }
+    else {
+        copyEvent = false;
     }
 
     if (copyEvent == true) {
-        cout << "copying event" << endl;
-  string line;
-  ifstream myfile ("/hep/thoresen/work/Cutflow/Cutflow/util/output.txt");
-  if (myfile.is_open())
-  {
-    cout << "file is open" << endl;
-    while ( getline (myfile,line) )
-    {
-        if (event->copy(line).isSuccess()) {
-      //cout << "reading line.." << endl;
-      cout << line << endl;
-      cout << typeid(line).name() << endl;
-
-      EL_RETURN_CHECK("execute()",event->copy(line));
-  }
-    }
-    myfile.close();
-  event->fill();
-  }
-  else cout << "Unable to open file"; 
-
+        cout << "copying event " << m_eventCounter << endl;
+        string line;
+        ifstream myfile ("/hep/thoresen/work/Cutflow/Cutflow/util/output.txt");
+        if (myfile.is_open())
+        {
+            cout << "   file is open" << endl;
+            while ( getline (myfile,line) )
+            {
+                if (event->copy(line).isSuccess()) {
+                    //cout << "reading line.." << endl;
+                    //cout << line << endl;
+                    //cout << typeid(line).name() << endl;
+                    EL_RETURN_CHECK("execute()",event->copy(line));
+                }
+            }
+            myfile.close();
+            cout << "   file is closed" << endl;
+            event->fill();
+        }
+        else cout << "Unable to open file"; 
     }
     else {
-        cout << "event not copied" << endl;
+        //cout << "event not copied" << endl;
     }
-
 
     return EL::StatusCode::SUCCESS;
 }
@@ -236,13 +237,16 @@ EL::StatusCode Boildown :: finalize ()
 {
     xAOD::TEvent* event = wk()->xaodEvent();
 
-   /*   if (m_grl) {
+    /*   
+    if (m_grl) {
     delete m_grl;
     m_grl = 0;
-  }*/
+    }
+    */
+    
     // finalize and close our output xAOD file:
-TFile *file = wk()->getOutputFile ("outputLabel");
-EL_RETURN_CHECK("finalize()",event->finishWritingTo( file ));
+    TFile *file = wk()->getOutputFile ("outputLabel");
+    EL_RETURN_CHECK("finalize()",event->finishWritingTo( file ));
     return EL::StatusCode::SUCCESS;
 }
 

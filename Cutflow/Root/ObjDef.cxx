@@ -95,12 +95,11 @@ EL::StatusCode ObjDef :: initialize ()
     TFile *file = wk()->getOutputFile ("outputLabel");
     EL_RETURN_CHECK("initialize()",event->writeTo(file));
  
-
-
     // as a check, let's see the number of events in our xAOD
     Info("initialize()", "Number of events = %lli", event->getEntries() ); // print long long int
 
-    /*m_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
+    /*
+    m_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
     const char* GRLFilePath = "share/GRLs";
     const char* fullGRLFilePath = gSystem->ExpandPathName (GRLFilePath);
     std::vector<std::string> vecStringGRL;
@@ -108,7 +107,7 @@ EL::StatusCode ObjDef :: initialize ()
     EL_RETURN_CHECK("initialize()",m_grl->setProperty( "GoodRunsListVec", vecStringGRL));
     EL_RETURN_CHECK("initialize()",m_grl->setProperty("PassThrough", false)); // if true (default) will ignore result of GRL and will just pass all events
     EL_RETURN_CHECK("initialize()",m_grl->initialize());
-*/
+    */
     return EL::StatusCode::SUCCESS;
 }
 
@@ -127,7 +126,8 @@ EL::StatusCode ObjDef :: execute ()
         m_eventCounter++;
 
 
-    /*Info("execute()", " ");
+    /*
+    Info("execute()", " ");
     Info("execute()", "=====================");
     Info("execute()", " * Event number %4d", m_eventCounter);
     Info("execute()", "---------------------");
@@ -145,13 +145,14 @@ EL::StatusCode ObjDef :: execute ()
     }
 
     // if data check if event passes GRL
-    /*if(!isMC){ // it's data!
+    /*
+    if(!isMC){ // it's data!
     if(!m_grl->passRunLB(*eventInfo)){
         //return EL::StatusCode::SUCCESS; // go to next event
         cout << "This is not in GoodRunsList" << endl;
         }
     } // end if not MC
-*/
+    */
 
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- CONTAINERS --------------------------------------------------
@@ -287,13 +288,16 @@ EL::StatusCode ObjDef :: finalize ()
 {
     xAOD::TEvent* event = wk()->xaodEvent();
 
-   /*   if (m_grl) {
-    delete m_grl;
-    m_grl = 0;
-  }*/
+    /*   
+    if (m_grl) {
+        delete m_grl;
+        m_grl = 0;
+    }
+    */
+
     // finalize and close our output xAOD file:
-TFile *file = wk()->getOutputFile ("outputLabel");
-EL_RETURN_CHECK("finalize()",event->finishWritingTo( file ));
+    TFile *file = wk()->getOutputFile ("outputLabel");
+    EL_RETURN_CHECK("finalize()",event->finishWritingTo( file ));
     return EL::StatusCode::SUCCESS;
 }
 
@@ -303,4 +307,3 @@ EL::StatusCode ObjDef :: histFinalize ()
 {
     return EL::StatusCode::SUCCESS;
 }
-

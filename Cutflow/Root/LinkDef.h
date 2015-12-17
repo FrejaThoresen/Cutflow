@@ -12,7 +12,7 @@
 #pragma link C++ nestedclass;
 #endif
 #ifdef __CINT__
-//#pragma link C++ class CutsInxAOD+;
+
 #pragma link C++ class SearchInxAOD+;
 #pragma link C++ class Boildown+;
 #pragma link C++ class MyAnalysis+;

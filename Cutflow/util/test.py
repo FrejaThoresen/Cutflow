@@ -8,17 +8,9 @@ for line in infile:
     if not line[72:].startswith('HLT'):
         for src, target in replacements.iteritems():            
             line = line.replace(src, target)
-        #if len(line) > 0:
-            #outfile.write(line[72:])
+
         line2 = line[72:].split(' ',2)
         print line2[0]
         
         outfile.write(line2[0])
         outfile.write('\n')
-        #if len(line2) > 0:
-            #line2[1] = line2[1].replace('\n','')
-            #outfile.write(line2[0])
-            #outfile.write('\n')
-            #outfile.write(line2[1])
-
-

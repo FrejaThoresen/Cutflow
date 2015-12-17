@@ -171,6 +171,7 @@ EL::StatusCode SearchInxAOD :: execute ()
 
     // fill the branches of our trees
     EventNumber = eventInfo->eventNumber();
+    cout << "EventNumber = " << EventNumber << endl;
     //tree->Fill();
     // ---------------------------------------------- VECTORS -----------------------------------------------
     vector<TLorentzVector> mu_vector_pos;
@@ -183,79 +184,51 @@ EL::StatusCode SearchInxAOD :: execute ()
     // USING THE CUTS CLASS
     CutsInxAOD *analyzer = new CutsInxAOD();
 
-
-    //const xAOD::PFOContainer* pflowForwardContainter = 0;
-    //const xAOD::PFOContainer* pflowCentralContainter = 0;
-
-
+    /*
     const xAOD::PFOContainer* chPFOs = 0;
     const xAOD::PFOContainer* neuPFOs = 0;
-
-
-    //EL_RETURN_CHECK("execute()",event->retrieve( pflowForwardContainter, "ParticleFlowIsoForwardEventShape" ));
-    //EL_RETURN_CHECK("execute()",event->retrieve( pflowCentralContainter, "ParticleFlowIsoCentralEventShape" ));
 
     EL_RETURN_CHECK("execute()", event->retrieve( chPFOs,      "JetETMissChargedParticleFlowObjects" ) );
     EL_RETURN_CHECK("execute()", event->retrieve( neuPFOs,     "JetETMissNeutralParticleFlowObjects" ) );
 
 
       // * Charged.
-  xAOD::PFOContainer::const_iterator PFlowCharged_itr = chPFOs->begin();
-  xAOD::PFOContainer::const_iterator PFlowCharged_end = chPFOs->end();
-  for ( ; PFlowCharged_itr != PFlowCharged_end; ++PFlowCharged_itr) {
-    chPFOpt = (*PFlowCharged_itr)->pt();
-    cout << "PLOW ENERGY#########################################" << chPFOpt << endl;
-    chPFO->Fill(chPFOpt);
-  }
-
+    xAOD::PFOContainer::const_iterator PFlowCharged_itr = chPFOs->begin();
+    xAOD::PFOContainer::const_iterator PFlowCharged_end = chPFOs->end();
+    for ( ; PFlowCharged_itr != PFlowCharged_end; ++PFlowCharged_itr) {
+        chPFOpt = (*PFlowCharged_itr)->pt();
+        //cout << "PLOW ENERGY#########################################" << chPFOpt << endl;
+        chPFO->Fill(chPFOpt);
+    }
 
     // * neutral.
-  xAOD::PFOContainer::const_iterator PFlowNeutral_itr = neuPFOs->begin();
-  xAOD::PFOContainer::const_iterator PFlowNeutral_end = neuPFOs->end();
-  for ( ; PFlowNeutral_itr != PFlowNeutral_end; ++PFlowNeutral_itr) {
-    neuPFOpt = (*PFlowNeutral_itr)->pt();
-    neuPFO->Fill(neuPFOpt);
-  }
+    xAOD::PFOContainer::const_iterator PFlowNeutral_itr = neuPFOs->begin();
+    xAOD::PFOContainer::const_iterator PFlowNeutral_end = neuPFOs->end();
+    for ( ; PFlowNeutral_itr != PFlowNeutral_end; ++PFlowNeutral_itr) {
+        neuPFOpt = (*PFlowNeutral_itr)->pt();
+        neuPFO->Fill(neuPFOpt);
+    }
+    */
 
 
+    //const xAOD::JetContainer* jets = 0;
+    //EL_RETURN_CHECK("execute()",event->retrieve( jets, "AntiKt10LCTopoJets" ));//TauJets
 
 
-
-//    const xAOD::JetContainer* jets = 0;
- //   EL_RETURN_CHECK("execute()",event->retrieve( jets, "AntiKt10LCTopoJets" ));//TauJets
-
-
-    /*m_jetCleaning->msg().setLevel( MSG::DEBUG );
+    //m_jetCleaning->msg().setLevel( MSG::DEBUG );
 
     // get muon container of interest
-    const xAOD::MuonContainer* muons = 0;
-    EL_RETURN_CHECK("execute()",event->retrieve( muons, "Muons" ));
 
-    const xAOD::ElectronContainer* electrons = 0;
-    EL_RETURN_CHECK("execute()",event->retrieve( electrons, "Electrons" ));
+
+    /*
 
     const xAOD::JetContainer* jets = 0;
     EL_RETURN_CHECK("execute()",event->retrieve( jets, "AntiKt4LCTopoJets" ));//TauJets
 
     analyzer->analyzeZbosonsFromJets(jets,m_jetCleaning);
-    analyzer->analyzeZbosonsFromElectrons(electrons);
-    analyzer->analyzeZbosonsFromMuons(muons);
 
-    Z_from_electrons = analyzer->getZbosonsFromElectrons();
-    Z_from_muons = analyzer->getZbosonsFromMuons();
     Z_from_jets = analyzer->getZbosonsFromJets();
 
-    for (int i = 0; i < (int)Z_from_electrons.size(); i++) {
-        Z_m_e = Z_from_electrons[i].M();
-        Z_pt_e = Z_from_electrons[i].Pt();
-        tree_Z_e->Fill(Z_m_e,Z_pt_e);
-    }
-
-    for (int j = 0; j < (int)Z_from_muons.size(); j++) {
-        Z_m_mu = Z_from_muons[j].M();
-        Z_pt_mu  = Z_from_muons[j].Pt();
-        tree_Z_mu->Fill(Z_m_mu,Z_pt_mu);
-    }
 
     if (Z_from_jets.size() != 0 ) {
         for (int k = 0; k < (int)Z_from_jets.size(); k++) {
@@ -266,6 +239,37 @@ EL::StatusCode SearchInxAOD :: execute ()
         }
     }
     */
+
+    const xAOD::ElectronContainer* electrons = 0;
+    EL_RETURN_CHECK("execute()",event->retrieve( electrons, "Electrons" ));
+    
+    analyzer->analyzeZbosonsFromElectrons(electrons);
+    Z_from_electrons = analyzer->getZbosonsFromElectrons();
+
+    for (int i = 0; i < (int)Z_from_electrons.size(); i++) {
+        Z_m_e = Z_from_electrons[i].M();
+        Z_pt_e = Z_from_electrons[i].Pt();
+        tree_Z_e->Fill(Z_m_e,Z_pt_e);
+    }
+
+    const xAOD::MuonContainer* muons = 0;
+    EL_RETURN_CHECK("execute()",event->retrieve( muons, "Muons" ));
+
+    analyzer->analyzeZbosonsFromMuons(muons);
+    Z_from_muons = analyzer->getZbosonsFromMuons();
+    if (Z_from_muons.size() > 0 || Z_from_electrons.size() > 0) {
+        cout << "found a Z" << endl;
+    }
+    else {
+        cout << "no Z" << endl;
+    }
+
+    for (int j = 0; j < (int)Z_from_muons.size(); j++) {
+        Z_m_mu = Z_from_muons[j].M();
+        Z_pt_mu  = Z_from_muons[j].Pt();
+        tree_Z_mu->Fill(Z_m_mu,Z_pt_mu);
+    }
+
     return EL::StatusCode::SUCCESS;
 }
 

@@ -2,7 +2,6 @@
 #include <iostream>
 
 using namespace std;
-//ClassImp(CutsInxAOD)
 
 CutsInxAOD::CutsInxAOD(){
 
@@ -103,9 +102,11 @@ void CutsInxAOD :: analyzeMuons(const xAOD::MuonContainer* muons) {
     for(; muon_itr != muon_end; ++muon_itr) {
         double muon_pt = (*muon_itr)->pt();
         ptcone = (*muon_itr)->auxdata<float>("ptcone20");
-        double iso = ptcone / muon_pt;
-
-        if (iso < 0.1 && muon_pt > 10000.0) {
+        //double iso = ptcone / muon_pt;
+            cout << "muon pt = " << muon_pt << endl;
+            cout << "muon charge = " << (*muon_itr)->charge() << endl;
+            //iso < 0.1 && 
+            //if (muon_pt > 10000.0) {
             double muon_eta = (*muon_itr)->eta();
             double muon_phi = (*muon_itr)->phi();
             double muon_charge = (*muon_itr)->charge();
@@ -117,21 +118,21 @@ void CutsInxAOD :: analyzeMuons(const xAOD::MuonContainer* muons) {
                 mu_vector_neg.push_back(TLorentzVector());
                 mu_vector_neg.back().SetPtEtaPhiM(muon_pt, muon_eta, muon_phi, 105.6);
             }
-        }
+        //}
     }
 }
 
 void CutsInxAOD :: analyzeElectrons(const xAOD::ElectronContainer* electrons) {
-// loop over the muons in the container
+    // loop over the muons in the container
     xAOD::ElectronContainer::const_iterator e_itr = electrons->begin();
     xAOD::ElectronContainer::const_iterator e_end = electrons->end();
 
     for (; e_itr != e_end; ++e_itr) {
         double e_pt = (*e_itr)->pt();
         double ptcone = (*e_itr)->auxdata<float>("ptcone20");
-        double iso = ptcone / e_pt;
-
-        if (iso < 0.1 && e_pt > 10000.0) {
+        //double iso = ptcone / e_pt;
+        //iso < 0.1 && 
+        //if (e_pt > 10000.0) {
             double e_eta = (*e_itr)->eta();
             double e_phi = (*e_itr)->phi();
             double e_charge = (*e_itr)->charge();
@@ -143,7 +144,7 @@ void CutsInxAOD :: analyzeElectrons(const xAOD::ElectronContainer* electrons) {
                 e_vector_neg.push_back(TLorentzVector());
                 e_vector_neg.back().SetPtEtaPhiM(e_pt, e_eta, e_phi, 0.511);
             }
-        }
+        //}
     }
 
 }
@@ -154,7 +155,7 @@ void CutsInxAOD :: analyzeZbosonsFromElectrons(const xAOD::ElectronContainer* el
     if (e_vector_neg.size() != 0 && e_vector_pos.size() != 0) {
         for (unsigned int i = 0; i < e_vector_pos.size(); i++) {
             for (unsigned int j = 0; j < e_vector_neg.size(); j++) {
-                if ((e_vector_pos[i] + e_vector_neg[j]).M() > 400000) {
+                if ((e_vector_pos[i] + e_vector_neg[j]).M()*0.001 - 90 > 15 && (e_vector_pos[i] + e_vector_neg[j]).Pt()*0.001 > 200) {
 
                     Z_from_electrons.push_back(e_vector_pos[i] + e_vector_neg[j]);
 
@@ -186,7 +187,7 @@ void CutsInxAOD :: analyzeZbosonsFromMuons(const xAOD::MuonContainer* muons) {
     if (mu_vector_neg.size() != 0 && mu_vector_pos.size() != 0) {
         for (unsigned int i = 0; i < mu_vector_pos.size(); i++) {
             for (unsigned int j = 0; j < mu_vector_neg.size(); j++) {
-                if ((mu_vector_pos[i] + mu_vector_neg[j]).M() > 400000) {
+                if ((mu_vector_pos[i] + mu_vector_neg[j]).M()*0.001 - 90 > 15 && (mu_vector_pos[i] + mu_vector_neg[j]).Pt()*0.001 > 200) {
                     Z_from_muons.push_back(mu_vector_pos[i] + mu_vector_neg[j]);
                 }
             }
@@ -202,14 +203,16 @@ void CutsInxAOD :: printZbosonsFromElectrons() {
              Z_from_electrons[i].Phi(),
              Z_from_electrons[i].M());
 
-        Info("execute()", "       1st electron pt = %.2f GeV   eta = %.3f   phi = %.3f",
+        Info("execute()", "       1st electron pt = %.2f GeV   eta = %.3f   phi = %.3f,    m = %.1f",
              e_vector_pos[i].Pt() * 0.001,
              e_vector_pos[i].Eta(),
-             e_vector_pos[i].Phi());
-        Info("execute()", "       2nd electron pt = %.2f GeV   eta = %.3f   phi = %.3f",
+             e_vector_pos[i].Phi(),
+             e_vector_pos[i].M());
+        Info("execute()", "       2nd electron pt = %.2f GeV   eta = %.3f   phi = %.3f,    m = %.1f",
              e_vector_neg[i].Pt() * 0.001,
              e_vector_neg[i].Eta(),
-             e_vector_neg[i].Phi());
+             e_vector_neg[i].Phi(),
+             e_vector_neg[i].M());
         cout <<
         "-----------------------------------------------------------------------------------------------------------------------" <<
         endl;

@@ -26,15 +26,19 @@ public:
     virtual EL::StatusCode postExecute ();
     virtual EL::StatusCode finalize ();
     virtual EL::StatusCode histFinalize ();
+    
     Boildown();
+
     string outputName;
     int m_eventCounter; //!
     int EventNumber; //!
-GoodRunsListSelectionTool *m_grl; //!
+    GoodRunsListSelectionTool *m_grl; //!
     JetCleaningTool *m_jetCleaning; //!
 
-  ClassDef(Boildown, 1);
+    vector<TLorentzVector> Z_from_muons; //!
+    vector<TLorentzVector> Z_from_electrons; //! 
 
+    ClassDef(Boildown, 1);
 };
 
 #endif

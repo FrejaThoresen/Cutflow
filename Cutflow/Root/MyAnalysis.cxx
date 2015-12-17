@@ -27,7 +27,7 @@ using namespace std;
 // this is needed to distribute the algorithm to the workers
 ClassImp(MyAnalysis)
 
-/// Helper macro for checking xAOD::TReturnCode return values
+// Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )                     \
    do {                                                     \
       if( ! EXP.isSuccess() ) {                             \
@@ -141,36 +141,21 @@ EL::StatusCode MyAnalysis :: execute ()
     const xAOD::PFOContainer* chPFOs = 0;
     const xAOD::PFOContainer* neuPFOs = 0;
 
-    EL_RETURN_CHECK("execute()", event->retrieve( chPFOs, "GoodPFOch" ) );
-    EL_RETURN_CHECK("execute()", event->retrieve( neuPFOs, "GoodPFOneu" ) );
-
-
-
+    EL_RETURN_CHECK("execute()", event->retrieve( chPFOs,  "JetETMissChargedParticleFlowObjects" ) );
+    EL_RETURN_CHECK("execute()", event->retrieve( neuPFOs, "JetETMissNeutralParticleFlowObjects" ) );
 
     //-------------------------------------------------------------------------------------------------------
     //---------------------------------------------- PFLOW --------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
-    double chPFOpt = 0.;
-    double neuPFOpt = 0.;
-
-      // * Charged.
-    vector<TLorentzVector> chPFO_vec; 
-    vector<TLorentzVector> chPFO_vec_new; 
-
     for (unsigned int i = 0; i < chPFOs->size(); i++) {
-        chPFOpt = chPFOs->at(i)->pt();
-        chPFO->Fill(chPFOpt);
+        chPFO->Fill(chPFOs->at(i)->pt());
         chPFO_vec.push_back(TLorentzVector());
         chPFO_vec.back().SetPtEtaPhiM(chPFOs->at(i)->pt(), chPFOs->at(i)->eta(), chPFOs->at(i)->phi(), chPFOs->at(i)->m());
     }
 
-    vector<TLorentzVector> neuPFO_vec; 
-    vector<TLorentzVector> neuPFO_vec_new; 
-
     for (unsigned int i = 0; i < neuPFOs->size(); i++) {
-        neuPFOpt = neuPFOs->at(i)->pt();
-        neuPFO->Fill(neuPFOpt);
+        neuPFO->Fill(neuPFOs->at(i)->pt());
         neuPFO_vec.push_back(TLorentzVector());
         neuPFO_vec.back().SetPtEtaPhiM(neuPFOs->at(i)->pt(), neuPFOs->at(i)->eta(), neuPFOs->at(i)->phi(), neuPFOs->at(i)->m());
     }

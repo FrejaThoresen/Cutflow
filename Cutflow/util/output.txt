@@ -1,13 +1,5 @@
-MuonCaloEnergyCollection
 TrigConfKeys
-ESDtoAOD_mems
-TrigInDetTrackTruthMap
-RAWtoESD_mems
-HITStoRDO_timings
-EVNTtoHITS_timings
 LVL1JetEtRoI
-ESDtoAOD_timings
-RAWtoESD_timings
 InDetTrackParticlesClusterAssociations
 Kt4EMTopoEventShape
 Kt4LCTopoEventShape
@@ -18,11 +10,6 @@ ParticleFlowIsoForwardEventShape
 ParticleFlowIsoCentralEventShape
 NeutralParticleFlowIsoForwardEventShape
 NeutralParticleFlowIsoCentralEventShape
-TileMuObj
-InDetTrackParticlesAssociatedClusters_links
-MBTSContainer
-E4prContainer
-LArNoisyROSummary
 LVL1EnergySumRoI
 LVL1MuonRoIs
 MET_EMTopo
@@ -35,7 +22,6 @@ InDetTrackParticlesAssociatedClusters
 MET_EMTopoRegions
 MET_Truth
 MET_LocHadTopoRegions
-RawInfoSummaryForTag
 LVL1JetRoIs
 BTagging_AntiKt4EMTopoJFVtx
 egammaTruthParticles
@@ -56,7 +42,6 @@ TauSecondaryVertices
 xTrigDecision
 TauChargedParticleFlowObjects
 EventInfo
-MuonClusterCollection_links
 BTagging_AntiKt2TrackSecVtx
 BTagging_AntiKt4EMTopoSecVtx
 BTagging_AntiKt3TrackSecVtx
@@ -79,7 +64,6 @@ TauShotParticleFlowObjects
 CombinedMuonTrackParticles
 Muons
 METAssoc_AntiKt4EMTopo
-egammaClusters_links
 METAssoc_AntiKt4LCTopo
 METAssoc_AntiKt4EMPFlow
 METMap_Truth
@@ -107,7 +91,6 @@ TauPi0Clusters
 BTagging_AntiKt2Track
 BTagging_AntiKt3Track
 BTagging_AntiKt4Track
-McEventInfo
 AntiKt10LCTopoJets
 JetETMissChargedParticleFlowObjects
 CamKt12LCTopoJets
@@ -115,7 +98,6 @@ Photons
 AntiKt4EMTopoJets
 AntiKt4EMPFlowJets
 AntiKt4LCTopoJets
-AODCellContainer
 TruthEvents
 TrigNavigation
 JetETMissNeutralParticleFlowObjects
