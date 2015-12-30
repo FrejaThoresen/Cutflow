@@ -21,12 +21,13 @@
 #include "Cutflow/METAnalysis.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
-#include "xAODMissingET/MissingETContainer.h"
 
 using namespace std;
 
-// this is needed to distribute the algorithm to the workers
 ClassImp(MyAnalysis)
+/*
+* This class is made for showing the effect on PFO pt when using wavelets.
+*/
 
 // Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )                     \
@@ -186,24 +187,6 @@ EL::StatusCode MyAnalysis :: execute ()
         chPFOwaveletPt = chPFO_vec_new.at(j).Pt();
         chPFOwavelet->Fill(chPFOwaveletPt);
     }
-
-    //-------------------------------------------------------------------------------------------------------
-    //------------------------------------------------ MET --------------------------------------------------
-    //-------------------------------------------------------------------------------------------------------
-
-    METAnalysis * metAnalyzer = new METAnalysis();
-    metAnalyzer->METfromPFOwWavelets(chPFOs, neuPFOs);
-    metAnalyzer->METfromPFO(chPFOs, neuPFOs);
-   
-    //-------------------------------------------------------------------------------------------------------
-    //------------------------------------------------ MET TRUTH --------------------------------------------
-    //-------------------------------------------------------------------------------------------------------
-
-
-    const xAOD::MissingETContainer* METTruth = 0;
-
-    EL_RETURN_CHECK("execute()", event->retrieve( METTruth,  "MET_Truth" ) );
-
 
     return EL::StatusCode::SUCCESS;
 }

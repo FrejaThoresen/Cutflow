@@ -13,69 +13,56 @@ class SearchInxAOD : public EL::Algorithm
 {
     // put your configuration variables here as public variables.
     // that way they can be set directly from CINT and python.
-public:
-    // float cutValue;
-    string outputName;
-    TNtuple* tree_Z_mu; //!
-    TNtuple* tree_Z_e; //!
-    TNtuple* tree_Z_j; //!
-    TNtuple* chPFO; //!
-    TNtuple* neuPFO; //!
+    public:
+        // float cutValue;
+        string outputName;
+        TNtuple* tree_Z_mu; //!
+        TNtuple* tree_Z_e; //!
+        TNtuple* tree_Z_j; //!
+        TNtuple* chPFO; //!
+        TNtuple* neuPFO; //!
 
+        int EventNumber; //!
 
-    int EventNumber; //!
+        vector<TLorentzVector> Z_from_muons; //!
+        vector<TLorentzVector> Z_from_electrons; //!
+        vector<TLorentzVector> Z_from_jets; //!
 
-/*
-    TBranch *branch_e_m;//!
-    TBranch *branch_mu_m ;//!
-    TBranch *branch_j_m ;//!
-    TBranch *branch_e_pt;//!
-    TBranch *branch_mu_pt;//!
-    TBranch *branch_j_pt ;//!
-*/
-    //m_jetCleaning = new JetCleaningTool("JetCleaning");
-
-
-    vector<TLorentzVector> Z_from_muons; //!
-    vector<TLorentzVector> Z_from_electrons; //!
-    vector<TLorentzVector> Z_from_jets; //!
-
-    Float_t Z_m_e;//!
-    Float_t Z_m_mu;//!
-    Float_t Z_m_j;//!
-    Float_t Z_pt_e;//!
-    Float_t Z_pt_mu;//!
-    Float_t Z_pt_j;//!
+        Float_t Z_m_e;//!
+        Float_t Z_m_mu;//!
+        Float_t Z_m_j;//!
+        Float_t Z_pt_e;//!
+        Float_t Z_pt_mu;//!
+        Float_t Z_pt_j;//!
         Float_t neuPFOpt;//!
-    Float_t chPFOpt;//!
+        Float_t chPFOpt;//!
 
 
     // variables that don't get filled at submission time should be
     // protected from being send from the submission node to the worker
     // node (done by the //!)
-public:
-    // Tree *myTree; //!
-    // TH1 *myHist; //!
-    int m_eventCounter; //!
+    public:
 
-    JetCleaningTool *m_jetCleaning; //!
+        int m_eventCounter; //!
 
-    // this is a standard constructor
-    SearchInxAOD ();
+        JetCleaningTool *m_jetCleaning; //!
 
-    // these are the functions inherited from Algorithm
-    virtual EL::StatusCode setupJob (EL::Job& job);
-    virtual EL::StatusCode fileExecute ();
-    virtual EL::StatusCode histInitialize ();
-    virtual EL::StatusCode changeInput (bool firstFile);
-    virtual EL::StatusCode initialize ();
-    virtual EL::StatusCode execute ();
-    virtual EL::StatusCode postExecute ();
-    virtual EL::StatusCode finalize ();
-    virtual EL::StatusCode histFinalize ();
+        // this is a standard constructor
+        SearchInxAOD ();
 
-    // this is needed to distribute the algorithm to the workers
-    ClassDef(SearchInxAOD, 1);
+        // these are the functions inherited from Algorithm
+        virtual EL::StatusCode setupJob (EL::Job& job);
+        virtual EL::StatusCode fileExecute ();
+        virtual EL::StatusCode histInitialize ();
+        virtual EL::StatusCode changeInput (bool firstFile);
+        virtual EL::StatusCode initialize ();
+        virtual EL::StatusCode execute ();
+        virtual EL::StatusCode postExecute ();
+        virtual EL::StatusCode finalize ();
+        virtual EL::StatusCode histFinalize ();
+
+        // this is needed to distribute the algorithm to the workers
+        ClassDef(SearchInxAOD, 1);
 };
 
 #endif

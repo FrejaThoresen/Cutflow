@@ -8,12 +8,10 @@
 #include "SampleHandler/DiskListLocal.h"
 #include <TSystem.h>
 #include "SampleHandler/ScanDir.h"
-#include "xAODMuon/MuonContainer.h"
 #include "Cutflow/SearchInxAOD.h"
 #include <EventLoopAlgs/NTupleSvc.h>
 #include <EventLoop/OutputStream.h>
 #include "Cutflow/Boildown.h"
-#include "Cutflow/METAnalysis.h"
 #include "Cutflow/MyMETAnalysis.h"
 
 using namespace std;

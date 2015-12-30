@@ -8,11 +8,9 @@
 #include "SampleHandler/DiskListLocal.h"
 #include <TSystem.h>
 #include "SampleHandler/ScanDir.h"
-#include "xAODMuon/MuonContainer.h"
-#include "Cutflow/SearchInxAOD.h"
+#include "Cutflow/MyAnalysis.h"
 #include <EventLoopAlgs/NTupleSvc.h>
 #include <EventLoop/OutputStream.h>
-#include "Cutflow/Boildown.h"
 
 using namespace std;
 
@@ -37,8 +35,11 @@ char gridon = '1';
                     "mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
     }
     else {
-        const char *inputFilePath = gSystem->ExpandPathName("/hep/storage/thoresen/ZZllqq_xAOD/mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
-        SH::ScanDir().filePattern("AOD.05771747._000001.pool.root.1").scan(sh, inputFilePath);
+        const char *inputFilePath = gSystem->ExpandPathName("/hep/thoresen/work/Cutflow/runs/36/data-outputLabel/");
+        SH::ScanDir().filePattern("mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264.root").scan(sh, inputFilePath);
+
+        //const char *inputFilePath = gSystem->ExpandPathName("/hep/storage/thoresen/ZZllqq_xAOD/mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
+        //SH::ScanDir().filePattern("AOD.05771747._000001.pool.root.1").scan(sh, inputFilePath);
     }
 
 
@@ -56,8 +57,7 @@ char gridon = '1';
     //job.options()->setDouble (EL::Job::optMaxEvents, 4000);
 
     // Add our analysis to the job:
-    Boildown* alg = new Boildown();
-    //SearchInxAOD* alg = new SearchInxAOD();
+    MyAnalysis* alg = new MyAnalysis();
     job.algsAdd( alg );
 
     // define an output and an ntuple associated to that output

@@ -13,21 +13,21 @@
 using namespace std;
 class WaveletAnalysis  { // : public TObject
 
-private:
-    NewWave::PixelDefinition* _pixelDefinition; //!
-    NewWave::GSLEngine* _waveletEngine; //!
-    NewWave::GSLEngine* _waveletEngine1; //!
-    vector<TLorentzVector> chPFOwave; //!
-    vector<TLorentzVector> neuPFOwave; //!
-public:
-    // constructor
-    WaveletAnalysis(int nPixel, double yRange);
+    private:
+        NewWave::PixelDefinition* _pixelDefinition; //!
+        NewWave::GSLEngine* _waveletEngine; //!
+        NewWave::GSLEngine* _waveletEngine1; //!
+        vector<TLorentzVector> chPFOwave; //!
+        vector<TLorentzVector> neuPFOwave; //!
+    public:
+        // constructor
+        WaveletAnalysis(int nPixel, double yRange);
 
-    vector<TLorentzVector> getChPFOwave();
-    vector<TLorentzVector> getNeuPFOwave();
+        vector<TLorentzVector> getChPFOwave();
+        vector<TLorentzVector> getNeuPFOwave();
 
-    void analyzeNeuPFO(vector<TLorentzVector> neuPFO);
-    void analyzeChPFO(vector<TLorentzVector> chPFO);
+        void analyzeNeuPFO(vector<TLorentzVector> neuPFO);
+        void analyzeChPFO(vector<TLorentzVector> chPFO);
 };
 
 #endif

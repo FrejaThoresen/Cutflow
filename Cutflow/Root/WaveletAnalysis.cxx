@@ -5,7 +5,9 @@
 #include "NewWave/GSLEngine.hh"
 
 using namespace std;
-//ClassImp(WaveletAnalysis)
+/*
+* Tool for wavelet analysis
+*/
 
 WaveletAnalysis::WaveletAnalysis(int nPixel, double yRange){
     _pixelDefinition = new NewWave::PixelDefinition(nPixel, yRange);

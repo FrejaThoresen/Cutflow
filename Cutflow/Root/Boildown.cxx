@@ -198,7 +198,7 @@ EL::StatusCode Boildown :: execute ()
     if (copyEvent == true) {
         cout << "copying event " << m_eventCounter << endl;
         string line;
-        ifstream myfile ("/hep/thoresen/work/Cutflow/Cutflow/util/output.txt");
+        ifstream myfile ("/hep/thoresen/work/Cutflow/Cutflow/share/output.txt");
         if (myfile.is_open())
         {
             cout << "   file is open" << endl;

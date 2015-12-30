@@ -8,7 +8,6 @@
 #include "SampleHandler/DiskListLocal.h"
 #include <TSystem.h>
 #include "SampleHandler/ScanDir.h"
-#include "xAODMuon/MuonContainer.h"
 #include "Cutflow/SearchInxAOD.h"
 #include <EventLoopAlgs/NTupleSvc.h>
 #include <EventLoop/OutputStream.h>

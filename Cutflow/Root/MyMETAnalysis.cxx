@@ -21,12 +21,14 @@
 #include "Cutflow/METAnalysis.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
-//#include "xAODMissingET/MissingETContainer.h"
 
 using namespace std;
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(MyMETAnalysis)
+/*
+* This class is for making NTuples of MET values.
+*/
 
 // Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )                     \
@@ -186,9 +188,7 @@ EL::StatusCode MyMETAnalysis :: execute ()
     //------------------------------------------------ MET TRUTH --------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
-
     //const xAOD::MissingETContainer* METTruthContain = 0;
-
     //EL_RETURN_CHECK("execute()", event->retrieve( METTruthContain,  "MET_Truth" ) );
     METTruthTree->Fill(METTruthpt);
 /*

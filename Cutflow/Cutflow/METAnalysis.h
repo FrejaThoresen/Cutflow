@@ -13,30 +13,17 @@ using namespace std;
 class METAnalysis  { // : public TObject
 
 private:
-    vector<TLorentzVector> mu_vector_neg; //!
-    vector<TLorentzVector> mu_vector_pos; //!
-    vector<TLorentzVector> e_vector_neg; //!
-    vector<TLorentzVector> e_vector_pos; //!
-    vector<TLorentzVector> jet_vector; //!
-
-    vector<TLorentzVector> Z_from_jets; //!
-    vector<TLorentzVector> Z_from_muons; //!
-    vector<TLorentzVector> Z_from_electrons; //!
-
-    vector<TLorentzVector> chPFO; //!
-    vector<TLorentzVector> neuPFO; //!
     vector<TLorentzVector> chPFO_vec; //!
     vector<TLorentzVector> chPFO_vec_new; //! 
     vector<TLorentzVector> neuPFO_vec; //!
     vector<TLorentzVector> neuPFO_vec_new; //! 
+
     double chMET; //!
     double neuMET; //!
     double chwlMET; //!
     double neuwlMET; //!
 
 public:
-
-
     // constructor
     METAnalysis();
 
@@ -45,6 +32,7 @@ public:
     void METfromPFOwWavelets(const xAOD::PFOContainer* chPFOs, const xAOD::PFOContainer* neuPFOs);
     void METfromxAOD();
     void METfromParticleContainers();
+    
     double getNeuPFOwlMET();
     double getChPFOwlMET();  
     double getNeuPFOMET();

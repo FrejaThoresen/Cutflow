@@ -6,15 +6,19 @@
 
 using namespace std;
 
+/*
+* MET Analysis tool
+*/
 
 METAnalysis::METAnalysis(){
-
-
+    chMET = 0;
+    neuMET = 0;
+    chwlMET = 0;
+    neuwlMET = 0;
 }
 
 void METAnalysis::METfromPFO(const xAOD::PFOContainer* chPFOs, const xAOD::PFOContainer* neuPFOs) {
-     chMET = 0;
-     neuMET = 0;
+
 	TLorentzVector chFourMom = TLorentzVector();
 	TLorentzVector neuFourMom = TLorentzVector();
 
@@ -35,8 +39,7 @@ void METAnalysis::METfromPFO(const xAOD::PFOContainer* chPFOs, const xAOD::PFOCo
 }
 
 void METAnalysis::METfromPFOwWavelets(const xAOD::PFOContainer* chPFOs, const xAOD::PFOContainer* neuPFOs) {
-     chwlMET = 0;
-     neuwlMET = 0;
+
     for (unsigned int i = 0; i < chPFOs->size(); i++) {
         chPFO_vec.push_back(TLorentzVector());
         chPFO_vec.back().SetPtEtaPhiM(chPFOs->at(i)->pt(), chPFOs->at(i)->eta(), chPFOs->at(i)->phi(), chPFOs->at(i)->m());
