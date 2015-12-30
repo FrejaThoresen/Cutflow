@@ -17,16 +17,16 @@
 #include "EventLoop/OutputStream.h"
 #include "xAODPFlow/PFOContainer.h"
 #include "xAODPFlow/PFO.h"
-#include "Cutflow/MyAnalysis.h"
+#include "Cutflow/MyMETAnalysis.h"
 #include "Cutflow/METAnalysis.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
-#include "xAODMissingET/MissingETContainer.h"
+//#include "xAODMissingET/MissingETContainer.h"
 
 using namespace std;
 
 // this is needed to distribute the algorithm to the workers
-ClassImp(MyAnalysis)
+ClassImp(MyMETAnalysis)
 
 // Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )                     \
@@ -40,13 +40,13 @@ ClassImp(MyAnalysis)
    } while( false )
 
 
-MyAnalysis :: MyAnalysis ()
+MyMETAnalysis :: MyMETAnalysis ()
 {
 }
 
 
 
-EL::StatusCode MyAnalysis :: setupJob (EL::Job& job)
+EL::StatusCode MyMETAnalysis :: setupJob (EL::Job& job)
 {
     job.useXAOD ();
     EL_RETURN_CHECK( "setupJob()", xAOD::Init() ); // call before opening first file
@@ -55,40 +55,43 @@ EL::StatusCode MyAnalysis :: setupJob (EL::Job& job)
 
 
 
-EL::StatusCode MyAnalysis :: histInitialize ()
+EL::StatusCode MyMETAnalysis :: histInitialize ()
 {
     TFile *outputFile = wk()->getOutputFile (outputName);
 
-    chPFO = new TNtuple("chPFO", "chPFO","chPFOpt");
-    neuPFO = new TNtuple("neuPFO", "neuPFO","neuPFOpt");
-    neuPFOwavelet = new TNtuple("neuPFOwavelet", "neuPFOwavelet","neuPFOwaveletPt");
-    chPFOwavelet = new TNtuple("chPFOwavelet", "chPFOwavelet","chPFOwaveletPt");
+    METTruthTree = new TNtuple("METTruthTree", "METTruthTree","METTruthpt");
+    chPFOMET = new TNtuple("chPFOMET", "chPFOMET","chPFOptMET");
+    neuPFOMET = new TNtuple("neuPFOMET", "neuPFOMET","neuPFOptMET");
+    neuPFOwlMET = new TNtuple("neuPFOwlMET", "neuPFOwlMET","neuPFOwlptMET");
+    chPFOwlMET = new TNtuple("chPFOwlMET", "chPFOwlMET","chPFOwlptMET");
 
-    chPFO->SetDirectory (outputFile);
-    neuPFO->SetDirectory (outputFile);
-    neuPFOwavelet->SetDirectory (outputFile);
-    chPFOwavelet->SetDirectory (outputFile);
+
+    METTruthTree->SetDirectory (outputFile);
+    chPFOMET->SetDirectory (outputFile);
+    neuPFOMET->SetDirectory (outputFile);
+    neuPFOwlMET->SetDirectory (outputFile);
+    chPFOwlMET->SetDirectory (outputFile);
 
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode MyAnalysis :: fileExecute ()
+EL::StatusCode MyMETAnalysis :: fileExecute ()
 {
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode MyAnalysis :: changeInput (bool firstFile)
+EL::StatusCode MyMETAnalysis :: changeInput (bool firstFile)
 {
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode MyAnalysis :: initialize ()
+EL::StatusCode MyMETAnalysis :: initialize ()
 {
 
     // count number of events
@@ -103,7 +106,7 @@ EL::StatusCode MyAnalysis :: initialize ()
 
 
 
-EL::StatusCode MyAnalysis :: execute ()
+EL::StatusCode MyMETAnalysis :: execute ()
 {
 
     //-------------------------------------------------------------------------------------------------------
@@ -146,46 +149,15 @@ EL::StatusCode MyAnalysis :: execute ()
     //-------------------------------------------------------------------------------------------------------
 
     for (unsigned int i = 0; i < chPFOs->size(); i++) {
-        chPFO->Fill(chPFOs->at(i)->pt());
         chPFO_vec.push_back(TLorentzVector());
         chPFO_vec.back().SetPtEtaPhiM(chPFOs->at(i)->pt(), chPFOs->at(i)->eta(), chPFOs->at(i)->phi(), chPFOs->at(i)->m());
     }
 
     for (unsigned int i = 0; i < neuPFOs->size(); i++) {
-        neuPFO->Fill(neuPFOs->at(i)->pt());
         neuPFO_vec.push_back(TLorentzVector());
         neuPFO_vec.back().SetPtEtaPhiM(neuPFOs->at(i)->pt(), neuPFOs->at(i)->eta(), neuPFOs->at(i)->phi(), neuPFOs->at(i)->m());
     }
 
-    //-------------------------------------------------------------------------------------------------------
-    //---------------------------------------------- WAVELET ------------------------------------------------
-    //-------------------------------------------------------------------------------------------------------
-
-    int nPixel =  64;
-    double yRange = 3.2;
-    NewWave::PixelDefinition* _pixelDefinition = new NewWave::PixelDefinition(nPixel, yRange);
-    NewWave::GSLEngine* _waveletEngine = new NewWave::GSLEngine(gsl_wavelet_haar, 2, *_pixelDefinition);
-
-    NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowNeu(neuPFO_vec, *_pixelDefinition, *_waveletEngine);
-    wePFlowNeu.denoise(1.);
-    neuPFO_vec_new = wePFlowNeu.particles();
-
-    NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowCh(chPFO_vec, *_pixelDefinition, *_waveletEngine);
-    wePFlowCh.denoise(1.);
-    chPFO_vec_new = wePFlowCh.particles();
-
-    
-    double neuPFOwaveletPt = 0.;
-    for (unsigned int j = 0; j < neuPFO_vec_new.size(); j++) {
-        neuPFOwaveletPt = neuPFO_vec_new.at(j).Pt();
-        neuPFOwavelet->Fill(neuPFOwaveletPt);
-    }
-
-    double chPFOwaveletPt = 0.;
-    for (unsigned int j = 0; j < chPFO_vec_new.size(); j++) {
-        chPFOwaveletPt = chPFO_vec_new.at(j).Pt();
-        chPFOwavelet->Fill(chPFOwaveletPt);
-    }
 
     //-------------------------------------------------------------------------------------------------------
     //------------------------------------------------ MET --------------------------------------------------
@@ -195,29 +167,49 @@ EL::StatusCode MyAnalysis :: execute ()
     metAnalyzer->METfromPFOwWavelets(chPFOs, neuPFOs);
     metAnalyzer->METfromPFO(chPFOs, neuPFOs);
    
+    double neuPFOwlptMET = metAnalyzer->getNeuPFOwlMET();
+    neuPFOwlMET->Fill(neuPFOwlptMET);
+
+    double chPFOwlptMET = metAnalyzer->getChPFOwlMET();
+    chPFOwlMET->Fill(chPFOwlptMET);
+
+    double neuPFOptMET = metAnalyzer->getNeuPFOMET();
+    neuPFOMET->Fill(neuPFOptMET);
+
+    double chPFOptMET = metAnalyzer->getChPFOMET();
+    chPFOMET->Fill(chPFOptMET);
+
+    double METTruthpt =0;
+    //METTruth->Fill(METTruthpt);
+
     //-------------------------------------------------------------------------------------------------------
     //------------------------------------------------ MET TRUTH --------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
 
-    const xAOD::MissingETContainer* METTruth = 0;
+    //const xAOD::MissingETContainer* METTruthContain = 0;
 
-    EL_RETURN_CHECK("execute()", event->retrieve( METTruth,  "MET_Truth" ) );
-
-
+    //EL_RETURN_CHECK("execute()", event->retrieve( METTruthContain,  "MET_Truth" ) );
+    METTruthTree->Fill(METTruthpt);
+/*
+    for (unsigned int i = 0; i < METTruthContain->size(); i++) {
+        METTruthpt = METTruthContain->at(i)->mpx()
+        METTruthTree->Fill(METTruthpt);
+    }
+*/
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode MyAnalysis :: postExecute ()
+EL::StatusCode MyMETAnalysis :: postExecute ()
 {
     return EL::StatusCode::SUCCESS;
 }
 
 
 
-EL::StatusCode MyAnalysis :: finalize ()
+EL::StatusCode MyMETAnalysis :: finalize ()
 {
     xAOD::TEvent* event = wk()->xaodEvent();
     return EL::StatusCode::SUCCESS;
@@ -225,7 +217,7 @@ EL::StatusCode MyAnalysis :: finalize ()
 
 
 
-EL::StatusCode MyAnalysis :: histFinalize ()
+EL::StatusCode MyMETAnalysis :: histFinalize ()
 {
     return EL::StatusCode::SUCCESS;
 }
