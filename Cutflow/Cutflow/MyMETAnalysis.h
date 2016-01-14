@@ -35,7 +35,10 @@ public:
     TNtuple* neuPFOwlMET; //!
     TNtuple* chPFOwlMET; //!
 
-
+    TNtuple* PFOMET;//!
+    TNtuple* PFOMETwl;//!
+    TNtuple* diffPFO;//!
+    TNtuple* diffPFOwl;//! 
 
     vector<TLorentzVector> chPFO_vec; //!
     vector<TLorentzVector> chPFO_vec_new; //! 

@@ -35,8 +35,11 @@ char gridon = '1';
                     "mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
     }
     else {
-        const char *inputFilePath = gSystem->ExpandPathName("/hep/storage/thoresen/llqqSamples2015/data15/ntuple/VVXAOD-00-00-27/data15_13TeV.00276262.physics_Main.merge.DAOD_EXOT12.f620_m1480_p2425/");
-        SH::ScanDir().filePattern("output.root").scan(sh, inputFilePath);
+        //const char *inputFilePath = gSystem->ExpandPathName("/hep/storage/thoresen/llqqSamples2015/data15/ntuple/VVXAOD-00-00-27/data15_13TeV.00276262.physics_Main.merge.DAOD_EXOT12.f620_m1480_p2425/");
+        //SH::ScanDir().filePattern("output.root").scan(sh, inputFilePath);
+        const char *inputFilePath = gSystem->ExpandPathName("/hep/thoresen/data/mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
+        SH::ScanDir().filePattern("AOD.05771747.*").scan(sh, inputFilePath);
+
     }
 
 

@@ -21,6 +21,7 @@
 #include "Cutflow/METAnalysis.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
+#include "xAODMissingET/MissingETContainer.h"
 
 using namespace std;
 
@@ -61,11 +62,17 @@ EL::StatusCode MyMETAnalysis :: histInitialize ()
 {
     TFile *outputFile = wk()->getOutputFile (outputName);
 
-    METTruthTree = new TNtuple("METTruthTree", "METTruthTree","METTruthpt");
-    chPFOMET = new TNtuple("chPFOMET", "chPFOMET","chPFOptMET");
-    neuPFOMET = new TNtuple("neuPFOMET", "neuPFOMET","neuPFOptMET");
-    neuPFOwlMET = new TNtuple("neuPFOwlMET", "neuPFOwlMET","neuPFOwlptMET");
-    chPFOwlMET = new TNtuple("chPFOwlMET", "chPFOwlMET","chPFOwlptMET");
+    METTruthTree = new TNtuple("METTruthTree", "MET Truth","METTruthpt");
+    chPFOMET = new TNtuple("chPFOMET", "Charged Particle Flow MET","chPFOptMET");
+    neuPFOMET = new TNtuple("neuPFOMET", "Neutral Particle Flow MET","neuPFOptMET");
+    neuPFOwlMET = new TNtuple("neuPFOwlMET", "Neutral Particle Flow MET with Wavelets","neuPFOwlptMET");
+    chPFOwlMET = new TNtuple("chPFOwlMET", "Charged Particle Flow MET with Wavelets","chPFOwlptMET");
+
+    PFOMET = new TNtuple("PFOMET", "Particle Flow MET", "pfoMET");
+    PFOMETwl = new TNtuple("PFOMETwl", "Particle Flow MET with Wavelets", "pfoMETwl");
+    diffPFO = new TNtuple("diffPFOMET", "Difference of Particle Flow MET and MET_Truth", "pfoMETdiff");
+    diffPFOwl= new TNtuple("diffPFOMETwl", "Difference of Particle Flow MET with Wavelets and MET_Truth", "pfoMETdiffwl");
+
 
 
     METTruthTree->SetDirectory (outputFile);
@@ -73,7 +80,10 @@ EL::StatusCode MyMETAnalysis :: histInitialize ()
     neuPFOMET->SetDirectory (outputFile);
     neuPFOwlMET->SetDirectory (outputFile);
     chPFOwlMET->SetDirectory (outputFile);
-
+    PFOMET->SetDirectory (outputFile);
+    PFOMETwl->SetDirectory (outputFile);
+    diffPFO->SetDirectory (outputFile);
+    diffPFOwl->SetDirectory (outputFile);
     return EL::StatusCode::SUCCESS;
 }
 
@@ -130,6 +140,7 @@ EL::StatusCode MyMETAnalysis :: execute ()
     // check if the event is MC
     if(eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION ) ){
         isMC = true; // can do something with this later
+        cout << "This is MC" << endl;
     }
 
     // fill the branches of our trees
@@ -142,10 +153,11 @@ EL::StatusCode MyMETAnalysis :: execute ()
 
     const xAOD::PFOContainer* chPFOs = 0;
     const xAOD::PFOContainer* neuPFOs = 0;
+    const xAOD::MissingETContainer* METcontainer = 0;
 
     EL_RETURN_CHECK("execute()", event->retrieve( chPFOs,  "JetETMissChargedParticleFlowObjects" ) );
     EL_RETURN_CHECK("execute()", event->retrieve( neuPFOs, "JetETMissNeutralParticleFlowObjects" ) );
-
+    EL_RETURN_CHECK("execute()", event->retrieve( METcontainer, "MET_Truth"));
     //-------------------------------------------------------------------------------------------------------
     //---------------------------------------------- PFLOW --------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
@@ -181,22 +193,25 @@ EL::StatusCode MyMETAnalysis :: execute ()
     double chPFOptMET = metAnalyzer->getChPFOMET();
     chPFOMET->Fill(chPFOptMET);
 
-    double METTruthpt =0;
-    //METTruth->Fill(METTruthpt);
+    double METTruthpt = 0;
 
-    //-------------------------------------------------------------------------------------------------------
-    //------------------------------------------------ MET TRUTH --------------------------------------------
-    //-------------------------------------------------------------------------------------------------------
+    for (unsigned int i = 0; i < METcontainer->size(); i++) {
+        METTruthpt = METcontainer->at(i)->met();
+            METTruthTree->Fill(METTruthpt);
+            cout << "truth" << METTruthpt << endl;
+    }    
 
-    //const xAOD::MissingETContainer* METTruthContain = 0;
-    //EL_RETURN_CHECK("execute()", event->retrieve( METTruthContain,  "MET_Truth" ) );
-    METTruthTree->Fill(METTruthpt);
-/*
-    for (unsigned int i = 0; i < METTruthContain->size(); i++) {
-        METTruthpt = METTruthContain->at(i)->mpx()
-        METTruthTree->Fill(METTruthpt);
-    }
-*/
+    double pfoMET = chPFOptMET + neuPFOptMET;
+    double pfoMETwl = chPFOwlptMET + neuPFOwlptMET;
+    double pfoMETdiff = METTruthpt - pfoMET;
+    double pfoMETdiffwl = METTruthpt - pfoMETwl;
+
+    PFOMET->Fill(pfoMET);
+    PFOMETwl->Fill(pfoMETwl);
+    diffPFO->Fill(pfoMETdiff);
+    diffPFOwl->Fill(pfoMETdiffwl);
+    
+
     return EL::StatusCode::SUCCESS;
 }
 
@@ -211,7 +226,7 @@ EL::StatusCode MyMETAnalysis :: postExecute ()
 
 EL::StatusCode MyMETAnalysis :: finalize ()
 {
-    xAOD::TEvent* event = wk()->xaodEvent();
+    //xAOD::TEvent* event = wk()->xaodEvent();
     return EL::StatusCode::SUCCESS;
 }
 
