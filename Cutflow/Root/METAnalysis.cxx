@@ -10,11 +10,12 @@ using namespace std;
 * MET Analysis tool
 */
 
-METAnalysis::METAnalysis(){
+METAnalysis::METAnalysis(double N_pileup){
     chMET = 0;
     neuMET = 0;
     chwlMET = 0;
     neuwlMET = 0;
+    pileup = N_pileup;
 }
 
 void METAnalysis::METfromPFO(const xAOD::PFOContainer* chPFOs, const xAOD::PFOContainer* neuPFOs) {
@@ -56,11 +57,11 @@ void METAnalysis::METfromPFOwWavelets(const xAOD::PFOContainer* chPFOs, const xA
     NewWave::GSLEngine* _waveletEngine = new NewWave::GSLEngine(gsl_wavelet_haar, 2, *_pixelDefinition);
 
     NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowNeu(neuPFO_vec, *_pixelDefinition, *_waveletEngine);
-    wePFlowNeu.denoise(1.);
+    wePFlowNeu.denoise(sqrt(pileup)*1000);
     neuPFO_vec_new = wePFlowNeu.particles();
 
     NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowCh(chPFO_vec, *_pixelDefinition, *_waveletEngine);
-    wePFlowCh.denoise(1.);
+    wePFlowCh.denoise(sqrt(pileup)*1000);
     chPFO_vec_new = wePFlowCh.particles();
 
     

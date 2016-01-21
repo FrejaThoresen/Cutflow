@@ -35,7 +35,7 @@ char gridon = '1';
                     "mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
     }
     else {
-        const char *inputFilePath = gSystem->ExpandPathName("/hep/thoresen/work/Cutflow/runs/36/data-outputLabel/");
+        const char *inputFilePath = gSystem->ExpandPathName("/hep/thoresen/work/Cutflow/runs/runfromdownloaddatanew/data-outputLabel");
         SH::ScanDir().filePattern("mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264.root").scan(sh, inputFilePath);
 
         //const char *inputFilePath = gSystem->ExpandPathName("/hep/storage/thoresen/ZZllqq_xAOD/mc15_13TeV.361610.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZqqll_mqq20mll20.merge.AOD.e4054_s2608_s2183_r6630_r6264/");
@@ -54,7 +54,7 @@ char gridon = '1';
     // Create an EventLoop job:
     EL::Job job;
     job.sampleHandler( sh );
-    //job.options()->setDouble (EL::Job::optMaxEvents, 4000);
+    job.options()->setDouble (EL::Job::optMaxEvents, 1);
 
     // Add our analysis to the job:
     MyAnalysis* alg = new MyAnalysis();

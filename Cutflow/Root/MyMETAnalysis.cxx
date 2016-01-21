@@ -22,6 +22,7 @@
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
 #include "xAODMissingET/MissingETContainer.h"
+#include "TH2.h"
 
 using namespace std;
 
@@ -84,6 +85,13 @@ EL::StatusCode MyMETAnalysis :: histInitialize ()
     PFOMETwl->SetDirectory (outputFile);
     diffPFO->SetDirectory (outputFile);
     diffPFOwl->SetDirectory (outputFile);
+
+
+    h2 = new TH2F("h2","h2 title", 100, -4, 4, 100, -3, 3 );
+
+    wk()->addOutput(h2);
+
+
     return EL::StatusCode::SUCCESS;
 }
 
@@ -145,8 +153,8 @@ EL::StatusCode MyMETAnalysis :: execute ()
 
     // fill the branches of our trees
     EventNumber = eventInfo->eventNumber();
+    double N_pileup = eventInfo->averageInteractionsPerCrossing();
 
-    
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- CONTAINERS -------------------------------------------
     //-------------------------------------------------------------------------------------------------------
@@ -173,11 +181,47 @@ EL::StatusCode MyMETAnalysis :: execute ()
     }
 
 
+
+
+    //-------------------------------------------------------------------------------------------------------
+    //---------------------------------------------- CONTOUR PLOT --------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------
+
+
+    for (int i = 0; i < neuPFO_vec.size(); i++) {
+        h2->Fill(neuPFO_vec.at(i).Eta(), neuPFO_vec.at(i).Phi(),  neuPFO_vec.at(i).Pt());
+    }
+    h2->Draw("COLZ");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     //-------------------------------------------------------------------------------------------------------
     //------------------------------------------------ MET --------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
-    METAnalysis * metAnalyzer = new METAnalysis();
+    METAnalysis * metAnalyzer = new METAnalysis(N_pileup);
     metAnalyzer->METfromPFOwWavelets(chPFOs, neuPFOs);
     metAnalyzer->METfromPFO(chPFOs, neuPFOs);
    

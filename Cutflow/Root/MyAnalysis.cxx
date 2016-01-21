@@ -21,6 +21,7 @@
 #include "Cutflow/METAnalysis.h"
 #include "NewWave/NewWave.hh"
 #include "NewWave/GSLEngine.hh"
+#include "Cutflow/WaveletAnalysis.h"
 
 using namespace std;
 
@@ -130,8 +131,9 @@ EL::StatusCode MyAnalysis :: execute ()
 
     // fill the branches of our trees
     EventNumber = eventInfo->eventNumber();
+    double N_pileup = eventInfo->averageInteractionsPerCrossing();
 
-    
+    cout << "Pile up is: " << N_pileup << endl;
     //-------------------------------------------------------------------------------------------------------
     //----------------------------------------- CONTAINERS -------------------------------------------
     //-------------------------------------------------------------------------------------------------------
@@ -162,20 +164,28 @@ EL::StatusCode MyAnalysis :: execute ()
     //---------------------------------------------- WAVELET ------------------------------------------------
     //-------------------------------------------------------------------------------------------------------
 
-    int nPixel =  64;
-    double yRange = 3.2;
-    NewWave::PixelDefinition* _pixelDefinition = new NewWave::PixelDefinition(nPixel, yRange);
-    NewWave::GSLEngine* _waveletEngine = new NewWave::GSLEngine(gsl_wavelet_haar, 2, *_pixelDefinition);
+    WaveletAnalysis* wlAnalyzer = new WaveletAnalysis(64, 3.2, N_pileup);
 
-    NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowNeu(neuPFO_vec, *_pixelDefinition, *_waveletEngine);
+    //int nPixel =  64;
+    //double yRange = 3.2;
+    //NewWave::PixelDefinition* _pixelDefinition = new NewWave::PixelDefinition(nPixel, yRange);
+    //NewWave::GSLEngine* _waveletEngine = new NewWave::GSLEngine(gsl_wavelet_haar, 2, *_pixelDefinition);
+
+    /*NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowNeu(neuPFO_vec, *_pixelDefinition, *_waveletEngine);
     wePFlowNeu.denoise(1.);
     neuPFO_vec_new = wePFlowNeu.particles();
 
     NewWave::WaveletEvent<vector<TLorentzVector>> wePFlowCh(chPFO_vec, *_pixelDefinition, *_waveletEngine);
     wePFlowCh.denoise(1.);
     chPFO_vec_new = wePFlowCh.particles();
+*/
+    wlAnalyzer->analyzeNeuPFO(neuPFO_vec);
+    wlAnalyzer->analyzeChPFO(chPFO_vec);
 
-    
+    chPFO_vec_new = wlAnalyzer->getChPFOwave();
+    neuPFO_vec_new = wlAnalyzer->getNeuPFOwave();
+
+
     double neuPFOwaveletPt = 0.;
     for (unsigned int j = 0; j < neuPFO_vec_new.size(); j++) {
         neuPFOwaveletPt = neuPFO_vec_new.at(j).Pt();

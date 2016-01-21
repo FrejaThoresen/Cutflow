@@ -19,9 +19,10 @@ class WaveletAnalysis  { // : public TObject
         NewWave::GSLEngine* _waveletEngine1; //!
         vector<TLorentzVector> chPFOwave; //!
         vector<TLorentzVector> neuPFOwave; //!
+        double pileup; //!
     public:
         // constructor
-        WaveletAnalysis(int nPixel, double yRange);
+        WaveletAnalysis(int nPixel, double yRange, double N_pileup);
 
         vector<TLorentzVector> getChPFOwave();
         vector<TLorentzVector> getNeuPFOwave();

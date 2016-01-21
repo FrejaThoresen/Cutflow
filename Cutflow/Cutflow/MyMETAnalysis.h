@@ -5,7 +5,7 @@
 #include "TNtuple.h"
 #include "NewWave/NewWave.hh"
 #include "GoodRunsLists/GoodRunsListSelectionTool.h"
-
+#include "TH2.h"
 
 using namespace std;
 
@@ -24,7 +24,7 @@ public:
     virtual EL::StatusCode finalize ();
     virtual EL::StatusCode histFinalize ();
     MyMETAnalysis();
-    
+    TH2F* h2; //!
     string outputName;
     int m_eventCounter; //!
     int EventNumber; //!

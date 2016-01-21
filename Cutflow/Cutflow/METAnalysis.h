@@ -22,10 +22,11 @@ private:
     double neuMET; //!
     double chwlMET; //!
     double neuwlMET; //!
+    double pileup; //!
 
 public:
     // constructor
-    METAnalysis();
+    METAnalysis(double N_pileup);
 
     // functions
     void METfromPFO(const xAOD::PFOContainer* chPFOs, const xAOD::PFOContainer* neuPFOs);
